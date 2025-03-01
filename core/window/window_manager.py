@@ -60,7 +60,8 @@ class WindowManager:
             # 获取页面索引
             page_index = {
                 "快速开始": 0,
-                "关于": 1,
+                "我的世界启动器": 1,
+                "关于": 5,
             }.get(page_name)
             
             if page_index is not None:

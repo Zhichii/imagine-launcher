@@ -4,6 +4,7 @@ from PySide6.QtGui import QFont, QFontDatabase
 from pages.quick_start import QuickStartPage
 from pages.about_page import AboutPage
 from pages.log_page import LogPage
+from pages.minecraft_home import MinecraftHomePage
 from core.animations.animation_manager import AnimationManager
 from core.log.log_manager import log
 from core.font.font_manager import FontManager
@@ -38,6 +39,7 @@ class PagesManager(QObject):
         self.example_page = ExamplePage()
         self.settings_page = SettingsPage()
         self.expandable_example_page = ExpandableExamplePage()
+        self.minecraft_home_page = MinecraftHomePage()
         
         # 初始化侧边栏
         self.sidebar = QWidget()
@@ -47,9 +49,10 @@ class PagesManager(QObject):
         
         # 使用字体管理器获取图标映射
         self.icons = {
-            "quick_start": ('dashboard', i18n.get_text("quick_start")),
+            #"quick_start": ('dashboard', i18n.get_text("quick_start")),
             "example": ('auto_awesome', i18n.get_text("example")),
             "expandable": ('expand_more', i18n.get_text("expandable")),
+            "minecraft": ('sports_esports', i18n.get_text("launcher_app_title")),
             "log": ('article', i18n.get_text("log")),
             "about": ('info', i18n.get_text("about")),
             "settings": ('settings', i18n.get_text("settings"))
@@ -62,7 +65,8 @@ class PagesManager(QObject):
         }
         
         # 添加按钮到布局
-        self.sidebar_layout.addWidget(self.buttons["quick_start"])
+        #self.sidebar_layout.addWidget(self.buttons["quick_start"])
+        self.sidebar_layout.addWidget(self.buttons["minecraft"])
         self.sidebar_layout.addWidget(self.buttons["example"])
         self.sidebar_layout.addWidget(self.buttons["expandable"])
         self.sidebar_layout.addStretch(1)
@@ -72,9 +76,10 @@ class PagesManager(QObject):
         
         # 添加页面映射
         self.pages = {
-            "quick_start": self.quick_start_page,
+            #"quick_start": self.quick_start_page,
             "example": self.example_page,
             "expandable": self.expandable_example_page,
+            "minecraft": self.minecraft_home_page,
             "log": self.log_page,
             "about": self.about_page,
             "settings": self.settings_page
@@ -85,10 +90,10 @@ class PagesManager(QObject):
             self.stacked_widget.addWidget(page)
         
         # 设置默认页面
-        self.buttons["quick_start"].setChecked(True)
-        self.stacked_widget.setCurrentWidget(self.quick_start_page)
-        self.current_page = "quick_start"
-        self.page_animation_manager.create_button_click_animation(self.buttons["quick_start"])
+        self.buttons["minecraft"].setChecked(True)
+        self.stacked_widget.setCurrentWidget(self.minecraft_home_page)
+        self.current_page = "minecraft"
+        self.page_animation_manager.create_button_click_animation(self.buttons["minecraft"])
         
         # 连接语言变更信号
         i18n.language_changed.connect(self.update_all_pages_text)
@@ -166,10 +171,16 @@ class PagesManager(QObject):
         
     def update_all_pages_text(self):
         # 更新侧边栏按钮文本
+        translation_keys = {
+            "minecraft": "launcher_app_title",
+        }
+        
         for key in self.buttons:
             text_label = self.buttons[key].findChild(QLabel, f"text_{key}")
             if text_label:
-                text_label.setText(i18n.get_text(key))
+                # 使用映射表查找正确的翻译键
+                trans_key = translation_keys.get(key, key)
+                text_label.setText(i18n.get_text(trans_key))
         
         # 更新每个页面的文本
         for page in self.pages.values():

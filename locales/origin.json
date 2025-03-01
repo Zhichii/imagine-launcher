@@ -156,5 +156,22 @@
     "effect_mica": "effect_mica",
     "effect_gaussian": "effect_gaussian",
     "effect_acrylic": "effect_acrylic",
-    "effect_aero": "effect_aero"
+    "effect_aero": "effect_aero",
+    "minecraft_launcher": "minecraft_launcher",
+    "game_version": "game_version",
+    "launch_game": "launch_game",
+    "game_info": "game_info",
+    "game_info_desc": "game_info_desc",
+    "quick_actions": "quick_actions",
+    "quick_actions_desc": "quick_actions_desc",
+    "version_management": "version_management",
+    "mod_management": "mod_management",
+    "game_directory": "game_directory",
+    "launch_status": "launch_status",
+    "ready": "ready",
+    "launching_minecraft": "launching_minecraft",
+    "navigating_to": "navigating_to",
+    "page_suffix": "page_suffix",
+    "opening_game_folder": "opening_game_folder",
+    "launcher_app_title": "launcher_app_title"
 } 

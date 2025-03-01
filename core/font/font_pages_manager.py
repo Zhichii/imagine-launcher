@@ -1,6 +1,6 @@
 # 字体管理器 -Pages
 
-from PySide6.QtGui import QFont, QFontDatabase, QAction
+from PySide6.QtGui import QFont, QFontDatabase, QAction, QColor
 from PySide6.QtWidgets import QWidget, QApplication, QLabel, QPushButton
 from core.ui.buttons_blue import Button 
 from PySide6.QtCore import Qt
@@ -10,6 +10,7 @@ import os
 import sys
 from core.font.font_manager import FontManager
 from core.thread.thread_manager import thread_manager
+import re
 
 def resource_path(relative_path):
     base_path = sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.path.abspath(".")
@@ -29,6 +30,20 @@ class FontPagesManager:
             'Windows': {'chinese': 'Source Han Sans CN', 'english': 'Roboto'},
             'Darwin': {'chinese': 'Source Han Sans CN', 'english': 'Roboto'},
             'Linux': {'chinese': 'Noto Sans CJK SC', 'english': 'Ubuntu'}
+        }
+    }
+    
+    # 颜色配置
+    COLOR_CONFIGS = {
+        'light': {
+            'text': '#1F2937',  # 暗色文本 - 用于亮色背景
+            'secondary': '#666666',
+            'disabled': '#9E9E9E'
+        },
+        'dark': {
+            'text': '#FFFFFF',  # 亮色文本 - 用于暗色背景
+            'secondary': '#E0E0E0',
+            'disabled': '#BDBDBD'
         }
     }
     
@@ -120,3 +135,64 @@ class FontPagesManager:
             return
             
         widget.setFont(self.button_font)
+    
+    def is_dark_color(self, color):
+        """
+        判断颜色是否为暗色
+        使用亮度公式: 0.299*R + 0.587*G + 0.114*B
+        亮度 < 128 被认为是暗色
+        """
+        if isinstance(color, str):
+            # 处理十六进制颜色字符串
+            if color.startswith('#'):
+                color = color[1:]
+            r = int(color[0:2], 16) if len(color) >= 2 else 0
+            g = int(color[2:4], 16) if len(color) >= 4 else 0
+            b = int(color[4:6], 16) if len(color) >= 6 else 0
+        elif isinstance(color, QColor):
+            r, g, b = color.red(), color.green(), color.blue()
+        else:
+            log.warning(f"不支持的颜色类型: {type(color)}")
+            return False
+            
+        brightness = (0.299 * r + 0.587 * g + 0.114 * b)
+        return brightness < 128
+    
+    def get_contrast_text_color(self, background_color):
+        """
+        根据背景颜色返回对比度高的文本颜色
+        """
+        if self.is_dark_color(background_color):
+            return self.COLOR_CONFIGS['dark']['text']
+        else:
+            return self.COLOR_CONFIGS['light']['text']
+    
+    def apply_adaptive_text_style(self, widget, background_color, font_type="normal"):
+        """
+        应用自适应文本样式，根据背景颜色自动选择文本颜色
+        """
+        if not isinstance(widget, (QLabel, QPushButton, Button)):
+            log.warning(f"不支持的控件类型: {type(widget)}")
+            return
+            
+        # 应用字体
+        self.apply_font(widget, font_type)
+        
+        # 确定文本颜色
+        text_color = self.get_contrast_text_color(background_color)
+        
+        # 应用样式
+        if isinstance(widget, QLabel):
+            widget.setStyleSheet(f"color: {text_color}; background: transparent;")
+        elif isinstance(widget, (QPushButton, Button)):
+            current_style = widget.styleSheet()
+            if "color:" in current_style:
+                # 替换现有的颜色设置
+                new_style = current_style.replace(
+                    re.search(r"color:\s*[^;]+;", current_style).group(0),
+                    f"color: {text_color};"
+                )
+            else:
+                # 添加颜色设置
+                new_style = current_style + f" color: {text_color};"
+            widget.setStyleSheet(new_style)

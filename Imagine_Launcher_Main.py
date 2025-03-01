@@ -20,6 +20,9 @@ import json
 import ctypes
 import win32gui
 import win32con
+import win32api
+from PIL import Image
+import tempfile
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -31,7 +34,7 @@ class MainWindow(QMainWindow):
         
         # 设置应用图标
         resource_manager = ResourceManager()
-        icon = resource_manager.get_icon("logo")
+        icon = resource_manager.get_icon("logo_256")
         if icon:
             # 设置窗口图标
             self.setWindowIcon(icon)
@@ -44,18 +47,100 @@ class MainWindow(QMainWindow):
                     hwnd = self.winId().__int__()
                     
                     # 加载图标文件
-                    icon_path = resource_manager.get_resource_path(os.path.join("resources", "logo.png"))
+                    
+                    icon_path = resource_manager.get_resource_path(os.path.join("resources", "logo.ico"))
+                    if not os.path.exists(icon_path):
+                        # 如果没有ico文件，尝试使用png
+                        icon_path = resource_manager.get_resource_path(os.path.join("resources", "logo.png"))
+                    
                     if os.path.exists(icon_path):
-                        # 设置任务栏图标
-                        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ClutUI.Nextgen")
-                        log.info("成功设置任务栏图标")
+                        # 设置应用程序ID
+                        app_id = "Imagine.Launcher.ClutUI.Nextgen"
+                        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+                        
+                        # 创建临时ICO文件
+                        with tempfile.NamedTemporaryFile(suffix='.ico', delete=False) as temp_ico:
+                            temp_ico_path = temp_ico.name
+                        
+                        # 使用原始logo图标
+                        img = Image.open(icon_path)
+                        
+                        # 更强的图标缩放和优化处理
+                        try:
+                            # 创建一个透明底色的正方形画布
+                            size = 256
+                            new_img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+                            
+                            # 大幅缩小图标尺寸到40%，使其在任务栏上更清晰
+                            width, height = img.size
+                            scale_factor = min(size * 0.4 / width, size * 0.4 / height)
+                            new_width = int(width * scale_factor)
+                            new_height = int(height * scale_factor)
+                            
+                            # 使用高质量缩放
+                            resized_img = img.resize((new_width, new_height), Image.LANCZOS)
+                            
+                            # 居中定位，留出充足边距
+                            left = (size - new_width) // 2
+                            top = (size - new_height) // 2
+                            
+                            # 粘贴到主画布
+                            new_img.paste(resized_img, (left, top), resized_img if resized_img.mode == 'RGBA' else None)
+                            
+                            # 准备各种尺寸的图标
+                            small_images = []
+                            sizes = []
+                            
+                            # 为任务栏生成特定尺寸的图标
+                            for s in [16, 24, 32, 48, 64]:
+                                # 为每个尺寸创建新画布
+                                small_canvas = Image.new('RGBA', (s, s), (0, 0, 0, 0))
+                                
+                                # 计算超小图标尺寸（只占画布的50%）
+                                small_width = int(s * 0.5)
+                                small_height = int(small_width * height / width) if width > 0 else small_width
+                                
+                                # 计算居中位置
+                                small_left = (s - small_width) // 2
+                                small_top = (s - small_height) // 2
+                                
+                                # 单独处理每个尺寸，确保最佳效果
+                                small_icon = img.resize((small_width, small_height), Image.LANCZOS)
+                                small_canvas.paste(small_icon, (small_left, small_top), small_icon if small_icon.mode == 'RGBA' else None)
+                                
+                                # 添加到图标列表
+                                small_images.append(small_canvas)
+                                sizes.append((s, s))
+                            
+                            # 正确保存多尺寸ICO文件
+                            new_img.save(temp_ico_path, format='ICO', sizes=sizes, append_images=small_images)
+                            
+                            # 加载ICO文件
+                            icon_handle = win32gui.LoadImage(
+                                0, temp_ico_path, win32con.IMAGE_ICON,
+                                0, 0, win32con.LR_LOADFROMFILE | win32con.LR_DEFAULTSIZE
+                            )
+                            
+                            # 设置窗口图标
+                            win32gui.SendMessage(hwnd, win32con.WM_SETICON, win32con.ICON_SMALL, icon_handle)
+                            win32gui.SendMessage(hwnd, win32con.WM_SETICON, win32con.ICON_BIG, icon_handle)
+                            
+                            # 清理临时文件
+                            try:
+                                os.unlink(temp_ico_path)
+                            except:
+                                pass
+                            
+                            log.info("成功使用更优化的临时ICO文件设置任务栏图标")
+                        except Exception as e:
+                            log.error(f"优化图标失败: {str(e)}")
                 except Exception as e:
                     log.error(f"设置任务栏图标失败: {str(e)}")
             
             log.info("成功加载应用图标")
         
         # 设置窗口基本属性
-        self.setWindowTitle(i18n.get_text("app_title", "ClutUI Nextgen"))
+        self.setWindowTitle(i18n.get_text("app_title", "Imagine Launcher"))
         self.setMinimumSize(600, 450)
         self.resize(1080, 650)
         
@@ -74,7 +159,7 @@ class MainWindow(QMainWindow):
         main_widget.hide()
         
         self.title_bar = TitleBar(self)
-        self.title_bar.title_label.setText(i18n.get_text("app_title_full", "ClutUI Next Generation"))
+        self.title_bar.title_label.setText(i18n.get_text("app_title_full", "Imagine Launcher"))
         main_layout.addWidget(self.title_bar)
         
         # 创建内容区域容器
@@ -187,8 +272,8 @@ class MainWindow(QMainWindow):
         self._init_background_effect()
 
     def _on_language_changed(self, lang=None):
-        self.setWindowTitle(i18n.get_text("app_title", "ClutUI Nextgen"))
-        self.title_bar.title_label.setText(i18n.get_text("app_title_full", "ClutUI Next Generation"))
+        self.setWindowTitle(i18n.get_text("app_title", "Imagine Launcher"))
+        self.title_bar.title_label.setText(i18n.get_text("app_title_full", "Imagine Launcher"))
         # 通知页面管理器更新所有页面的文本
         self.pages_manager.update_all_pages_text()
 
