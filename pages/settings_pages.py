@@ -4,13 +4,21 @@ from PySide6.QtWidgets import (
     QSpacerItem, QSizePolicy, QTabWidget, QGroupBox, QLineEdit,
     QFileDialog, QColorDialog, QMainWindow, QListView
 )
-from PySide6.QtCore import Qt, Signal, QSize
-from PySide6.QtGui import QIcon, QFont, QPixmap
+from PySide6.QtCore import Qt, Signal, QSize, QTimer
+from PySide6.QtGui import QIcon, QFont, QPixmap, QFontMetrics
 import json
 import os
 import sys
 import winreg
+import psutil
+import logging
+import platform
+import webbrowser
+from pathlib import Path
+# form clutui
+# i18n 
 from core.i18n import i18n
+# Resources Manager
 from core.utils.resource_manager import ResourceManager
 from core.log.log_manager import log
 from core.utils.notif import NotificationType
@@ -21,17 +29,22 @@ from core.ui.button_white import WhiteButton
 from core.ui.scroll_style import ScrollStyle
 from core.animations.scroll_hide_show import ScrollBarAnimation
 from core.font.font_pages_manager import FontPagesManager
+from minecraft.imagine_settings.ram_manager import RAMManager
+from core.ui.progress_bar import ProgressBar
 
 class SettingsPage(QWidget):
     settings_changed = Signal(dict)  # 发出设置改变信号
     language_changed = Signal(str)   # 添加语言改变信号
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, config_file=None):
         super().__init__(parent)
         self.resource_manager = ResourceManager()
-        self.config_file = 'config.json'
+        self.config_file = config_file or os.path.join(os.path.expanduser('~'), '.clutui', 'config.json')
         self.settings = self._load_settings()
         self.font_manager = FontPagesManager()
+        
+        # 创建RAM管理器
+        self.ram_manager = RAMManager(self.config_file)
         
         # 设置当前语言
         current_language = self.settings.get('language', 'zh')
@@ -72,25 +85,34 @@ class SettingsPage(QWidget):
         self.save_path_edit = None
         self.font_size_slider = None
         self.font_size_value = None
+        self.ram_slider = None
+        self.ram_value = None
+        self.ram_used_label = None
+        self.ram_available_label = None
+        
+        # 初始化信号连接状态跟踪字典
+        self._signal_connections = {}
         
         # 先创建UI
         self._init_ui()
         
-        # 连接语言变更信号
-        try:
-            i18n.language_changed.connect(self._update_all_texts)
-        except Exception as e:
-            log.error(f"连接语言变更信号失败: {str(e)}")
-            
-        # 最后连接其他信号
+        # 最后连接信号
         try:
             self._connect_signals()
         except Exception as e:
             log.error(f"连接组件信号失败: {str(e)}")
+        
+        # 创建定时器，定期更新内存信息
+        self.memory_update_timer = QTimer(self)
+        self.memory_update_timer.timeout.connect(self._update_memory_info)
+        self.memory_update_timer.start(5000)  # 每5秒更新一次
 
     def closeEvent(self, event):
-        """处理关闭事件"""
         try:
+            # 停止内存更新定时器
+            if hasattr(self, 'memory_update_timer') and self.memory_update_timer.isActive():
+                self.memory_update_timer.stop()
+                
             # 断开所有信号连接
             self._disconnect_all_signals()
         except Exception as e:
@@ -98,40 +120,140 @@ class SettingsPage(QWidget):
         super().closeEvent(event)
 
     def _disconnect_all_signals(self):
-        """断开所有信号连接"""
         try:
             # 断开语言变更信号
             try:
-                i18n.language_changed.disconnect(self._update_all_texts)
+                if hasattr(i18n, 'language_changed') and self._signal_connections.get('language_changed', False):
+                    try:
+                        i18n.language_changed.disconnect(self._update_all_texts)
+                        self._signal_connections['language_changed'] = False
+                    except (TypeError, RuntimeError, RuntimeWarning):
+                        # 如果信号未连接或已断开，会抛出异常，忽略它
+                        self._signal_connections['language_changed'] = False
+                        pass
             except Exception:
                 pass
             
             # 断开其他可能的信号连接
-            if self._is_widget_valid(self.effect_combo):
+            if hasattr(self, 'effect_combo') and self._is_widget_valid(self.effect_combo):
                 try:
-                    self.effect_combo.currentIndexChanged.disconnect()
-                except Exception:
+                    if self._signal_connections.get('effect_combo_changed', False):
+                        self.effect_combo.currentIndexChanged.disconnect(self.on_bg_effect_changed)
+                        self._signal_connections['effect_combo_changed'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['effect_combo_changed'] = False
                     pass
                     
-            if self._is_widget_valid(self.language_combo):
+            if hasattr(self, 'language_combo') and self._is_widget_valid(self.language_combo):
                 try:
-                    self.language_combo.currentIndexChanged.disconnect()
-                except Exception:
+                    if self._signal_connections.get('language_combo_changed', False):
+                        self.language_combo.currentIndexChanged.disconnect(self._on_language_selection_changed)
+                        self._signal_connections['language_combo_changed'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['language_combo_changed'] = False
                     pass
                     
-            if self._is_widget_valid(self.log_level_combo):
+            if hasattr(self, 'log_level_combo') and self._is_widget_valid(self.log_level_combo):
                 try:
-                    self.log_level_combo.currentIndexChanged.disconnect()
-                except Exception:
+                    # 使用blockSignals来暂时阻止信号
+                    self.log_level_combo.blockSignals(True)
+                except (TypeError, RuntimeError, RuntimeWarning):
                     pass
+                    
+            if hasattr(self, 'ram_slider') and self._is_widget_valid(self.ram_slider):
+                try:
+                    if self._signal_connections.get('ram_slider_changed', False):
+                        self.ram_slider.valueChanged.disconnect(self._on_ram_slider_changed)
+                        self._signal_connections['ram_slider_changed'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['ram_slider_changed'] = False
+                    pass
+                    
+            if hasattr(self, 'font_size_slider') and self._is_widget_valid(self.font_size_slider):
+                try:
+                    # 使用blockSignals来暂时阻止信号
+                    self.font_size_slider.blockSignals(True)
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    pass
+                    
+            # 断开保存按钮的信号连接
+            if hasattr(self, 'save_button') and self._is_widget_valid(self.save_button):
+                try:
+                    if self._signal_connections.get('save_button_clicked', False):
+                        self.save_button.clicked.disconnect(self._apply_settings)
+                        self._signal_connections['save_button_clicked'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['save_button_clicked'] = False
+                    pass
+                    
+            # 断开重置按钮的信号连接
+            if hasattr(self, 'reset_button') and self._is_widget_valid(self.reset_button):
+                try:
+                    if self._signal_connections.get('reset_button_clicked', False):
+                        self.reset_button.clicked.disconnect(self._reset_settings)
+                        self._signal_connections['reset_button_clicked'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['reset_button_clicked'] = False
+                    pass
+                    
+            # 断开开关的信号连接
+            if hasattr(self, 'startup_switch') and self._is_widget_valid(self.startup_switch):
+                try:
+                    if self._signal_connections.get('startup_switch_changed', False):
+                        self.startup_switch.switch.stateChanged.disconnect(self.on_startup_changed)
+                        self._signal_connections['startup_switch_changed'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['startup_switch_changed'] = False
+                    pass
+                    
+            if hasattr(self, 'auto_save_switch') and self._is_widget_valid(self.auto_save_switch):
+                try:
+                    if self._signal_connections.get('auto_save_switch_changed', False):
+                        self.auto_save_switch.switch.stateChanged.connect(self.on_auto_save_changed)
+                        self._signal_connections['auto_save_switch_changed'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['auto_save_switch_changed'] = False
+                    pass
+                    
+            # 断开自动RAM设置开关的信号连接
+            if hasattr(self, 'auto_ram_switch') and self._is_widget_valid(self.auto_ram_switch):
+                try:
+                    if self._signal_connections.get('auto_ram_switch_changed', False):
+                        self.auto_ram_switch.switch.stateChanged.disconnect(self.on_auto_ram_changed)
+                        self._signal_connections['auto_ram_switch_changed'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['auto_ram_switch_changed'] = False
+                    pass
+                    
+            # 断开RAM管理器的信号连接
+            if hasattr(self, 'ram_manager'):
+                try:
+                    if self._signal_connections.get('ram_manager_changed', False):
+                        self.ram_manager.ram_changed.disconnect(self._on_ram_value_changed)
+                        self._signal_connections['ram_manager_changed'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['ram_manager_changed'] = False
+                    pass
+                    
+                try:
+                    if self._signal_connections.get('auto_ram_state_changed', False):
+                        self.ram_manager.auto_ram_changed.disconnect(self._on_auto_ram_state_changed)
+                        self._signal_connections['auto_ram_state_changed'] = False
+                except (TypeError, RuntimeError, RuntimeWarning):
+                    self._signal_connections['auto_ram_state_changed'] = False
+                    pass
+                    
         except Exception as e:
             log.error(f"断开信号连接时出错: {str(e)}")
 
     def __del__(self):
-        """析构函数"""
+        """析构函数，确保在对象销毁时断开所有信号连接"""
         try:
-            self._disconnect_all_signals()
+            # 尝试断开所有信号连接
+            if hasattr(self, '_disconnect_all_signals'):
+                self._disconnect_all_signals()
         except Exception:
+            # 在析构函数中不应该抛出异常
             pass
 
     def _load_config(self):
@@ -148,6 +270,11 @@ class SettingsPage(QWidget):
     def _save_config(self, config):
         """保存配置文件"""
         try:
+            # 确保配置文件目录存在
+            config_dir = os.path.dirname(self.config_file)
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir, exist_ok=True)
+                
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=4, ensure_ascii=False)
             return True
@@ -167,7 +294,8 @@ class SettingsPage(QWidget):
             'log_level': 'info',
             'api_key': '',
             'auto_save': False,
-            'save_path': os.path.expanduser('~/Documents/ClutUI')
+            'save_path': os.path.expanduser('~/Documents/ClutUI'),
+            'launcher_ram': 4096  # 默认分配4GB RAM
         }
         
         config = self._load_config()
@@ -569,6 +697,120 @@ class SettingsPage(QWidget):
         advanced_layout = QVBoxLayout(advanced_tab)
         advanced_layout.setContentsMargins(20, 20, 20, 20)
         advanced_layout.setSpacing(20)
+        
+        # RAM设置组
+        ram_group = QGroupBox(i18n.get_text("ram_settings", "内存设置"))
+        ram_group.setObjectName("ram_group")
+        ram_layout = QVBoxLayout(ram_group)
+        ram_layout.setContentsMargins(15, 20, 15, 15)
+        ram_layout.setSpacing(10)
+        self.font_manager.apply_normal_style(ram_group)
+        
+        # RAM设置描述
+        ram_desc = QLabel(i18n.get_text("ram_settings_desc"))
+        ram_desc.setObjectName("ram_desc")
+        self.font_manager.apply_normal_style(ram_desc)
+        ram_desc.setWordWrap(True)
+        ram_layout.addWidget(ram_desc)
+        
+        # 添加自动RAM设置开关
+        self.auto_ram_switch = SwitchCard(
+            title=i18n.get_text("auto_ram"),
+            description=i18n.get_text("auto_ram_desc"),
+            switch_text=i18n.get_text("auto_ram")
+        )
+        self.auto_ram_switch.set_checked(self.ram_manager.get_auto_ram())
+        ram_layout.addWidget(self.auto_ram_switch)
+        
+        # RAM大小滑块
+        ram_slider_layout = QHBoxLayout()
+        ram_label = QLabel(i18n.get_text("ram_size"))
+        ram_label.setObjectName("ram_label")
+        self.font_manager.apply_normal_style(ram_label)
+        
+        # 使用RAM管理器获取系统内存信息
+        max_ram = self.ram_manager.get_max_allowed_ram()
+        
+        self.ram_slider = QSlider(Qt.Horizontal)
+        self.ram_slider.setMinimum(self.ram_manager.get_min_allowed_ram())
+        self.ram_slider.setMaximum(max_ram)
+        self.ram_slider.setSingleStep(128)
+        self.ram_slider.setPageStep(512)
+        
+        # 获取当前设置的RAM
+        current_ram = self.ram_manager.get_ram_size()
+        self.ram_slider.setValue(current_ram)
+        
+        # 如果自动RAM设置已启用，禁用滑块
+        if self.ram_manager.get_auto_ram():
+            self.ram_slider.setEnabled(False)
+        
+        self.ram_value = QLabel(f"{self.ram_slider.value()} MB")
+        self.font_manager.apply_normal_style(self.ram_value)
+        
+        # 添加系统总内存显示
+        system_ram_label = QLabel(f"({i18n.get_text('system_total_ram')}: {self.ram_manager.get_system_memory()} MB)")
+        self.font_manager.apply_normal_style(system_ram_label)
+        system_ram_label.setObjectName("system_ram_label")
+        
+        # 添加已使用内存和可用内存显示
+        ram_info_layout = QVBoxLayout()
+        
+        # 已使用内存部分
+        ram_used_layout = QVBoxLayout()
+        self.ram_used_label = QLabel(f"{i18n.get_text('ram_used')}: {self.ram_manager.get_used_ram()} MB")
+        self.font_manager.apply_normal_style(self.ram_used_label)
+        self.ram_used_label.setObjectName("ram_used_label")
+        
+        # 添加已使用内存进度条
+        self.ram_used_progress = ProgressBar(self)
+        try:
+            used_ram = self.ram_manager.get_used_ram()
+            total_ram = self.ram_manager.get_system_memory()
+            used_percent = min(100, int(used_ram / total_ram * 100)) if total_ram > 0 else 0
+            self.ram_used_progress.setProgress(used_percent)
+        except Exception as e:
+            log.error(f"计算已使用内存百分比失败: {str(e)}")
+            self.ram_used_progress.setProgress(0)
+        
+        ram_used_layout.addWidget(self.ram_used_label)
+        ram_used_layout.addWidget(self.ram_used_progress)
+        ram_used_layout.setSpacing(4)
+        
+        # 可用内存部分
+        ram_available_layout = QVBoxLayout()
+        self.ram_available_label = QLabel(f"{i18n.get_text('ram_available')}: {self.ram_manager.get_available_ram()} MB")
+        self.font_manager.apply_normal_style(self.ram_available_label)
+        self.ram_available_label.setObjectName("ram_available_label")
+        
+        # 添加可用内存进度条
+        self.ram_available_progress = ProgressBar(self)
+        try:
+            available_ram = self.ram_manager.get_available_ram()
+            total_ram = self.ram_manager.get_system_memory()
+            available_percent = min(100, int(available_ram / total_ram * 100)) if total_ram > 0 else 0
+            self.ram_available_progress.setProgress(available_percent)
+        except Exception as e:
+            log.error(f"计算可用内存百分比失败: {str(e)}")
+            self.ram_available_progress.setProgress(0)
+        
+        ram_available_layout.addWidget(self.ram_available_label)
+        ram_available_layout.addWidget(self.ram_available_progress)
+        ram_available_layout.setSpacing(4)
+        
+        # 将两个布局添加到主布局
+        ram_info_layout.addLayout(ram_used_layout)
+        ram_info_layout.addLayout(ram_available_layout)
+        ram_info_layout.setSpacing(10)
+        
+        ram_slider_layout.addWidget(ram_label)
+        ram_slider_layout.addWidget(self.ram_slider)
+        ram_slider_layout.addWidget(self.ram_value)
+        ram_layout.addLayout(ram_slider_layout)
+        ram_layout.addWidget(system_ram_label)
+        ram_layout.addLayout(ram_info_layout)
+        
+        # 日志设置组
         log_group = QGroupBox(i18n.get_text("log_settings"))
         log_group.setObjectName("log_group")
         log_layout = QVBoxLayout(log_group)
@@ -614,6 +856,8 @@ class SettingsPage(QWidget):
         view_logs_button.clicked.connect(self._view_logs)
         log_layout.addWidget(view_logs_button)
         
+        # 添加组到布局
+        advanced_layout.addWidget(ram_group)
         advanced_layout.addWidget(log_group)
         advanced_layout.addStretch()
         
@@ -693,83 +937,180 @@ class SettingsPage(QWidget):
     def _connect_signals(self):
         """连接信号槽"""
         try:
-            if self._is_widget_valid(self.save_button):
+            # 先断开所有可能的信号连接，避免重复连接
+            self._disconnect_all_signals()
+            
+            # 确保所有组件的信号都未被阻塞
+            if hasattr(self, 'log_level_combo') and self._is_widget_valid(self.log_level_combo):
+                self.log_level_combo.blockSignals(False)
+                
+            if hasattr(self, 'font_size_slider') and self._is_widget_valid(self.font_size_slider):
+                self.font_size_slider.blockSignals(False)
+            
+            # 连接各个组件的信号
+            if hasattr(self, 'save_button') and self._is_widget_valid(self.save_button):
                 self.save_button.clicked.connect(self._apply_settings)
+                self._signal_connections['save_button_clicked'] = True
                 
-            if self._is_widget_valid(self.reset_button):
+            if hasattr(self, 'reset_button') and self._is_widget_valid(self.reset_button):
                 self.reset_button.clicked.connect(self._reset_settings)
+                self._signal_connections['reset_button_clicked'] = True
                 
-            if self._is_widget_valid(self.language_combo):
+            if hasattr(self, 'language_combo') and self._is_widget_valid(self.language_combo):
                 self.language_combo.currentIndexChanged.connect(self._on_language_selection_changed)
+                self._signal_connections['language_combo_changed'] = True
                 
-            if self._is_widget_valid(self.effect_combo):
+            if hasattr(self, 'effect_combo') and self._is_widget_valid(self.effect_combo):
                 self.effect_combo.currentIndexChanged.connect(self.on_bg_effect_changed)
+                self._signal_connections['effect_combo_changed'] = True
                 
-            if self._is_widget_valid(self.startup_switch):
+            if hasattr(self, 'startup_switch') and self._is_widget_valid(self.startup_switch):
                 self.startup_switch.switch.stateChanged.connect(self.on_startup_changed)
+                self._signal_connections['startup_switch_changed'] = True
                 
-            if self._is_widget_valid(self.auto_save_switch):
+            if hasattr(self, 'auto_save_switch') and self._is_widget_valid(self.auto_save_switch):
                 self.auto_save_switch.switch.stateChanged.connect(self.on_auto_save_changed)
+                self._signal_connections['auto_save_switch_changed'] = True
+                
+            # 连接自动RAM设置开关信号
+            if hasattr(self, 'auto_ram_switch') and self._is_widget_valid(self.auto_ram_switch):
+                self.auto_ram_switch.switch.stateChanged.connect(self.on_auto_ram_changed)
+                self._signal_connections['auto_ram_switch_changed'] = True
+                
+            # 连接RAM滑块信号
+            if hasattr(self, 'ram_slider') and self._is_widget_valid(self.ram_slider):
+                self.ram_slider.valueChanged.connect(self._on_ram_slider_changed)
+                self._signal_connections['ram_slider_changed'] = True
+                
+            # 连接字体大小滑块信号
+            if hasattr(self, 'font_size_slider') and self._is_widget_valid(self.font_size_slider):
+                self.font_size_slider.valueChanged.connect(
+                    lambda v: self.font_size_value.setText(str(v)) if hasattr(self, 'font_size_value') and self._is_widget_valid(self.font_size_value) else None
+                )
+                self._signal_connections['font_size_slider_changed'] = True
+                
+            # 连接语言变更信号
+            try:
+                if hasattr(i18n, 'language_changed'):
+                    i18n.language_changed.connect(self._update_all_texts)
+                    self._signal_connections['language_changed'] = True
+            except Exception as e:
+                log.error(f"连接语言变更信号失败: {str(e)}")
+                
+            # 连接RAM管理器的信号
+            if hasattr(self, 'ram_manager'):
+                # 当RAM值改变时更新UI
+                self.ram_manager.ram_changed.connect(self._on_ram_value_changed)
+                self._signal_connections['ram_manager_changed'] = True
+                
+                # 当自动RAM设置状态改变时更新UI
+                self.ram_manager.auto_ram_changed.connect(self._on_auto_ram_state_changed)
+                self._signal_connections['auto_ram_state_changed'] = True
                 
         except Exception as e:
             log.error(f"连接信号时出错: {str(e)}")
     
     def _apply_settings(self):
         """应用设置"""
-        # 更新设置字典
-        self.settings['language'] = self.language_combo.currentData()
-        self.settings['background_effect'] = self.effect_combo.currentData()
-        self.settings['font_size'] = self.font_size_slider.value()
-        self.settings['auto_start'] = self.startup_switch.is_checked()
-        self.settings['auto_save'] = self.auto_save_switch.is_checked()
-        self.settings['log_level'] = self.log_level_combo.currentData()
-        self.settings['save_path'] = self.save_path_edit.text()
-        
-        # 保存设置
-        self._save_settings()
+        try:
+            # 更新设置字典
+            if hasattr(self, 'language_combo') and self._is_widget_valid(self.language_combo):
+                self.settings['language'] = self.language_combo.currentData()
+                
+            if hasattr(self, 'effect_combo') and self._is_widget_valid(self.effect_combo):
+                self.settings['background_effect'] = self.effect_combo.currentData()
+                
+            if hasattr(self, 'font_size_slider') and self._is_widget_valid(self.font_size_slider):
+                self.settings['font_size'] = self.font_size_slider.value()
+                
+            if hasattr(self, 'startup_switch') and self._is_widget_valid(self.startup_switch):
+                self.settings['auto_start'] = self.startup_switch.is_checked()
+                
+            if hasattr(self, 'auto_save_switch') and self._is_widget_valid(self.auto_save_switch):
+                self.settings['auto_save'] = self.auto_save_switch.is_checked()
+                
+            if hasattr(self, 'log_level_combo') and self._is_widget_valid(self.log_level_combo):
+                self.settings['log_level'] = self.log_level_combo.currentData()
+                
+            if hasattr(self, 'save_path_edit') and self._is_widget_valid(self.save_path_edit):
+                self.settings['save_path'] = self.save_path_edit.text()
+            
+            # 使用RAM管理器设置RAM大小
+            if hasattr(self, 'ram_slider') and self._is_widget_valid(self.ram_slider) and hasattr(self, 'ram_manager'):
+                # 只有在非自动RAM模式下才设置RAM大小
+                if not self.ram_manager.get_auto_ram():
+                    self.ram_manager.set_ram_size(self.ram_slider.value())
+            
+            # 保存设置
+            self._save_settings()
+        except Exception as e:
+            log.error(f"应用设置时出错: {str(e)}")
     
     def _reset_settings(self):
         """重置设置为默认值"""
-        # 语言
-        for i in range(self.language_combo.count()):
-            if self.language_combo.itemData(i) == 'zh':
-                self.language_combo.setCurrentIndex(i)
-                break
+        try:
+            # 语言
+            if hasattr(self, 'language_combo') and self._is_widget_valid(self.language_combo):
+                for i in range(self.language_combo.count()):
+                    if self.language_combo.itemData(i) == 'zh':
+                        self.language_combo.setCurrentIndex(i)
+                        break
+                    
+            # 背景效果
+            if hasattr(self, 'effect_combo') and self._is_widget_valid(self.effect_combo):
+                for i in range(self.effect_combo.count()):
+                    if self.effect_combo.itemData(i) == 'blur':
+                        self.effect_combo.setCurrentIndex(i)
+                        break
+                    
+            # 字体大小
+            if hasattr(self, 'font_size_slider') and self._is_widget_valid(self.font_size_slider):
+                self.font_size_slider.setValue(12)
+            
+            # 自动RAM设置 - 默认禁用
+            if hasattr(self, 'auto_ram_switch') and self._is_widget_valid(self.auto_ram_switch):
+                self.auto_ram_switch.set_checked(False)
                 
-        # 背景效果
-        for i in range(self.effect_combo.count()):
-            if self.effect_combo.itemData(i) == 'blur':
-                self.effect_combo.setCurrentIndex(i)
-                break
+            # RAM大小 - 使用RAM管理器获取推荐值
+            if hasattr(self, 'ram_slider') and self._is_widget_valid(self.ram_slider) and hasattr(self, 'ram_manager'):
+                recommended_ram = self.ram_manager.get_recommended_ram()
+                self.ram_slider.setValue(recommended_ram)
+                # 启用RAM滑块（因为自动RAM设置已禁用）
+                self.ram_slider.setEnabled(True)
+            
+            # 启动设置
+            if hasattr(self, 'startup_switch') and self._is_widget_valid(self.startup_switch):
+                self.startup_switch.set_checked(False)
                 
-        # 字体大小
-        self.font_size_slider.setValue(12)
-        
-        # 启动设置
-        self.startup_switch.set_checked(False)
-        self.auto_save_switch.set_checked(False)
-        
-        # 日志级别
-        for i in range(self.log_level_combo.count()):
-            if self.log_level_combo.itemData(i) == 'info':
-                self.log_level_combo.setCurrentIndex(i)
-                break
-                
-        # 保存路径
-        self.save_path_edit.setText(os.path.expanduser('~/Documents/ClutUI'))
-        
-        # 显示重置通知
-        if hasattr(self.window(), 'show_notification'):
-            self.window().show_notification(
-                text=i18n.get_text("settings_reset"),
-                type=NotificationType.INFO,
-                duration=2000
-            )
+            if hasattr(self, 'auto_save_switch') and self._is_widget_valid(self.auto_save_switch):
+                self.auto_save_switch.set_checked(False)
+            
+            # 日志级别
+            if hasattr(self, 'log_level_combo') and self._is_widget_valid(self.log_level_combo):
+                for i in range(self.log_level_combo.count()):
+                    if self.log_level_combo.itemData(i) == 'info':
+                        self.log_level_combo.setCurrentIndex(i)
+                        break
+                    
+            # 保存路径
+            if hasattr(self, 'save_path_edit') and self._is_widget_valid(self.save_path_edit):
+                self.save_path_edit.setText(os.path.expanduser('~/Documents/ClutUI'))
+            
+            # 显示重置通知
+            main_window = self.window()
+            if self._is_widget_valid(main_window) and hasattr(main_window, 'show_notification'):
+                main_window.show_notification(
+                    text=i18n.get_text("settings_reset"),
+                    type=NotificationType.INFO,
+                    duration=2000
+                )
+        except Exception as e:
+            log.error(f"重置设置时出错: {str(e)}")
     
     def _on_language_selection_changed(self, index):
         """语言选择改变时的处理"""
         try:
-            if not self._is_widget_valid(self.language_combo):
+            if not hasattr(self, 'language_combo') or not self._is_widget_valid(self.language_combo):
                 return
                 
             lang_code = self.language_combo.itemData(index)
@@ -841,7 +1182,7 @@ class SettingsPage(QWidget):
                 title_label.setText(i18n.get_text("settings"))
             
             # 检查并更新各个组件
-            if self._is_widget_valid(self.tab_widget):
+            if hasattr(self, 'tab_widget') and self._is_widget_valid(self.tab_widget):
                 # 立即更新选项卡标题
                 self.tab_widget.setTabText(0, i18n.get_text("general"))
                 self.tab_widget.setTabText(1, i18n.get_text("appearance"))
@@ -853,7 +1194,7 @@ class SettingsPage(QWidget):
                 self._update_advanced_tab_text()
             
             # 处理特殊的下拉框更新
-            if self._is_widget_valid(self.effect_combo):
+            if hasattr(self, 'effect_combo') and self._is_widget_valid(self.effect_combo):
                 try:
                     current_data = self.effect_combo.currentData()
                     self.effect_combo.blockSignals(True)
@@ -865,18 +1206,18 @@ class SettingsPage(QWidget):
                         if index >= 0:
                             self.effect_combo.setCurrentIndex(index)
                 finally:
-                    if self._is_widget_valid(self.effect_combo):
+                    if hasattr(self, 'effect_combo') and self._is_widget_valid(self.effect_combo):
                         self.effect_combo.blockSignals(False)
             
             # 更新按钮文本
-            if self._is_widget_valid(self.reset_button):
+            if hasattr(self, 'reset_button') and self._is_widget_valid(self.reset_button):
                 self.reset_button.update_title(i18n.get_text("reset"))
-            if self._is_widget_valid(self.save_button):
+            if hasattr(self, 'save_button') and self._is_widget_valid(self.save_button):
                 self.save_button.update_title(i18n.get_text("save"))
             
             # 更新语言选择框
             try:
-                if not self._is_widget_valid(self.language_combo):
+                if not hasattr(self, 'language_combo') or not self._is_widget_valid(self.language_combo):
                     return
                     
                 # 保存当前选择的语言
@@ -889,7 +1230,7 @@ class SettingsPage(QWidget):
                 # 安全地阻塞信号
                 signals_blocked = False
                 try:
-                    if self._is_widget_valid(self.language_combo):
+                    if hasattr(self, 'language_combo') and self._is_widget_valid(self.language_combo):
                         signals_blocked = self.language_combo.signalsBlocked()
                         self.language_combo.blockSignals(True)
                 except Exception as e:
@@ -898,7 +1239,7 @@ class SettingsPage(QWidget):
                 
                 try:
                     # 清空并重新添加选项
-                    if self._is_widget_valid(self.language_combo):
+                    if hasattr(self, 'language_combo') and self._is_widget_valid(self.language_combo):
                         self.language_combo.clear()
                         
                         # 添加语言选项
@@ -934,7 +1275,7 @@ class SettingsPage(QWidget):
                 finally:
                     # 安全地恢复信号状态
                     try:
-                        if self._is_widget_valid(self.language_combo):
+                        if hasattr(self, 'language_combo') and self._is_widget_valid(self.language_combo):
                             self.language_combo.blockSignals(signals_blocked)
                     except Exception as e:
                         log.error(f"恢复语言选择框信号状态时出错: {str(e)}")
@@ -943,10 +1284,11 @@ class SettingsPage(QWidget):
                 log.error(f"更新语言选择框时出错: {str(e)}")
             
             # 强制更新所有选项卡
-            for i in range(self.tab_widget.count()):
-                tab = self.tab_widget.widget(i)
-                if self._is_widget_valid(tab):
-                    tab.update()
+            if hasattr(self, 'tab_widget') and self._is_widget_valid(self.tab_widget):
+                for i in range(self.tab_widget.count()):
+                    tab = self.tab_widget.widget(i)
+                    if self._is_widget_valid(tab):
+                        tab.update()
             
             # 强制更新整个界面
             self.update()
@@ -1074,7 +1416,7 @@ class SettingsPage(QWidget):
     def _update_general_tab_text(self):
         try:
             # 检查 tab_widget 是否有效
-            if not self._is_widget_valid(self.tab_widget):
+            if not hasattr(self, 'tab_widget') or not self._is_widget_valid(self.tab_widget):
                 return
                 
             # 检查常规选项卡是否有效
@@ -1119,12 +1461,12 @@ class SettingsPage(QWidget):
                 browse_button.update_title(i18n.get_text("browse"))
             
             # 更新开关卡片文本
-            if self._is_widget_valid(self.startup_switch):
+            if hasattr(self, 'startup_switch') and self._is_widget_valid(self.startup_switch):
                 self.startup_switch.update_title(i18n.get_text("auto_start"))
                 self.startup_switch.description_label.setText(i18n.get_text("auto_start_desc"))
                 self.startup_switch.switch_label.setText(i18n.get_text("auto_start"))
             
-            if self._is_widget_valid(self.auto_save_switch):
+            if hasattr(self, 'auto_save_switch') and self._is_widget_valid(self.auto_save_switch):
                 self.auto_save_switch.update_title(i18n.get_text("auto_save"))
                 self.auto_save_switch.description_label.setText(i18n.get_text("auto_save_desc"))
                 self.auto_save_switch.switch_label.setText(i18n.get_text("auto_save"))
@@ -1139,7 +1481,7 @@ class SettingsPage(QWidget):
     def _update_appearance_tab_text(self):
         try:
             # 检查 tab_widget 是否有效
-            if not self._is_widget_valid(self.tab_widget):
+            if not hasattr(self, 'tab_widget') or not self._is_widget_valid(self.tab_widget):
                 return
                 
             # 检查外观选项卡是否有效
@@ -1189,7 +1531,7 @@ class SettingsPage(QWidget):
                 font_size_label.setText(i18n.get_text("font_size"))
             
             # 直接更新效果下拉框
-            if self._is_widget_valid(self.effect_combo):
+            if hasattr(self, 'effect_combo') and self._is_widget_valid(self.effect_combo):
                 try:
                     current_data = self.effect_combo.currentData()
                     self.effect_combo.blockSignals(True)
@@ -1205,7 +1547,7 @@ class SettingsPage(QWidget):
                         if index >= 0:
                             self.effect_combo.setCurrentIndex(index)
                 finally:
-                    if self._is_widget_valid(self.effect_combo):
+                    if hasattr(self, 'effect_combo') and self._is_widget_valid(self.effect_combo):
                         self.effect_combo.blockSignals(False)
             
             # 强制更新界面
@@ -1218,7 +1560,7 @@ class SettingsPage(QWidget):
     def _update_advanced_tab_text(self):
         try:
             # 检查 tab_widget 是否有效
-            if not self._is_widget_valid(self.tab_widget):
+            if not hasattr(self, 'tab_widget') or not self._is_widget_valid(self.tab_widget):
                 return
                 
             # 检查高级选项卡是否有效
@@ -1226,7 +1568,82 @@ class SettingsPage(QWidget):
             if not self._is_widget_valid(advanced_tab):
                 return
             
+            # 检查RAM管理器是否有效
+            if not hasattr(self, 'ram_manager'):
+                return
+                
             # 直接通过objectName查找并更新标签
+            # 更新RAM设置组
+            ram_group = advanced_tab.findChild(QGroupBox, "ram_group")
+            if self._is_widget_valid(ram_group):
+                ram_group.setTitle(i18n.get_text("ram_settings"))
+            
+            # 更新RAM设置描述
+            ram_desc = advanced_tab.findChild(QLabel, "ram_desc")
+            if self._is_widget_valid(ram_desc):
+                ram_desc.setText(i18n.get_text("ram_settings_desc"))
+            
+            # 更新RAM大小标签
+            ram_label = advanced_tab.findChild(QLabel, "ram_label")
+            if self._is_widget_valid(ram_label):
+                ram_label.setText(i18n.get_text("ram_size"))
+                
+            # 更新系统总内存标签
+            system_ram_label = advanced_tab.findChild(QLabel, "system_ram_label")
+            if self._is_widget_valid(system_ram_label):
+                try:
+                    system_ram_label.setText(f"({i18n.get_text('system_total_ram')}: {self.ram_manager.get_system_memory()} MB)")
+                except Exception as e:
+                    log.error(f"获取系统内存信息失败: {str(e)}")
+                    system_ram_label.setText(f"({i18n.get_text('system_total_ram')})")
+                
+            # 更新已使用和可用内存标签
+            if hasattr(self, 'ram_used_label') and self._is_widget_valid(self.ram_used_label):
+                try:
+                    total_ram = self.ram_manager.get_system_memory()
+                    used_ram = self.ram_manager.get_used_ram()
+                    
+                    # 估算本软件使用的内存（这里假设为50MB，实际应该从系统获取）
+                    app_ram = 50  # 假设本软件使用50MB内存
+                    
+                    # 计算系统其他程序使用的内存
+                    other_ram = used_ram - app_ram if used_ram > app_ram else 0
+                    
+                    self.ram_used_label.setText(f"{i18n.get_text('ram_used')}: {used_ram} MB")
+                    
+                    # 更新已使用内存进度条
+                    if hasattr(self, 'ram_used_progress') and self._is_widget_valid(self.ram_used_progress):
+                        # 系统其他程序使用的内存百分比
+                        other_percent = min(100, int(other_ram / total_ram * 100)) if total_ram > 0 else 0
+                        self.ram_used_progress.setProgress(other_percent)
+                        
+                        # 本软件使用的内存百分比
+                        app_percent = min(100, int(app_ram / total_ram * 100)) if total_ram > 0 else 0
+                        self.ram_used_progress.setAppProgress(app_percent)
+                        
+                        # 设置的RAM值百分比
+                        ram_value = self.ram_manager.get_ram_size()  # 使用RAM管理器获取当前RAM值
+                        ram_percent = min(100, int(ram_value / total_ram * 100)) if total_ram > 0 else 0
+                        self.ram_used_progress.setSecondaryProgress(ram_percent)
+                except Exception as e:
+                    log.error(f"更新已使用内存信息失败: {str(e)}")
+                    
+            if hasattr(self, 'ram_available_label') and self._is_widget_valid(self.ram_available_label):
+                try:
+                    available_ram = self.ram_manager.get_available_ram()
+                    self.ram_available_label.setText(f"{i18n.get_text('ram_available')}: {available_ram} MB")
+                    
+                    # 更新可用内存进度条
+                    if hasattr(self, 'ram_available_progress') and self._is_widget_valid(self.ram_available_progress):
+                        total_ram = self.ram_manager.get_system_memory()
+                        available_percent = min(100, int(available_ram / total_ram * 100)) if total_ram > 0 else 0
+                        self.ram_available_progress.setProgress(available_percent)
+                except Exception as e:
+                    log.error(f"获取可用内存信息失败: {str(e)}")
+                    self.ram_available_label.setText(f"{i18n.get_text('ram_available')}: -- MB")
+                    if hasattr(self, 'ram_available_progress') and self._is_widget_valid(self.ram_available_progress):
+                        self.ram_available_progress.setProgress(0)
+            
             # 更新日志设置组
             log_group = advanced_tab.findChild(QGroupBox, "log_group")
             if self._is_widget_valid(log_group):
@@ -1243,7 +1660,7 @@ class SettingsPage(QWidget):
                 view_logs_button.update_title(i18n.get_text("view_logs"))
                 
             # 检查combo box是否还存在且有效
-            if self._is_widget_valid(self.log_level_combo):
+            if hasattr(self, 'log_level_combo') and self._is_widget_valid(self.log_level_combo):
                 try:
                     # 更新日志级别下拉框
                     self.log_level_combo.blockSignals(True)
@@ -1258,7 +1675,7 @@ class SettingsPage(QWidget):
                             display_name = i18n.get_text(f"log_level_{level_code}")
                             self.log_level_combo.setItemText(i, display_name)
                 finally:
-                    if self._is_widget_valid(self.log_level_combo):
+                    if hasattr(self, 'log_level_combo') and self._is_widget_valid(self.log_level_combo):
                         self.log_level_combo.blockSignals(False)
             
             # 强制更新界面
@@ -1268,6 +1685,35 @@ class SettingsPage(QWidget):
         except Exception as e:
             log.error(f"更新高级选项卡文本时出错: {str(e)}")
     
+    def _on_ram_slider_changed(self, value):
+        try:
+            # 如果自动RAM设置已启用，不处理滑块变化
+            if hasattr(self, 'ram_manager') and self.ram_manager.get_auto_ram():
+                return
+                
+            if hasattr(self, 'ram_value') and self._is_widget_valid(self.ram_value):
+                self.ram_value.setText(f"{value} MB")
+                
+            # 直接保存RAM值到配置文件
+            if hasattr(self, 'ram_manager'):
+                self.ram_manager.set_ram_size(value)
+                # 更新设置字典
+                self.settings['launcher_ram'] = value
+                
+            # 更新系统内存标签
+            system_ram_label = self.findChild(QLabel, "system_ram_label")
+            if not hasattr(self, 'ram_manager'):
+                return
+                
+            if self._is_widget_valid(system_ram_label):
+                try:
+                    system_ram_label.setText(f"({i18n.get_text('system_total_ram', '系统总内存')}: {self.ram_manager.get_system_memory()} MB)")
+                except Exception as e:
+                    log.error(f"获取系统内存信息失败: {str(e)}")
+                    system_ram_label.setText(f"({i18n.get_text('system_total_ram', '系统总内存')})")
+        except Exception as e:
+            log.error(f"更新RAM信息失败: {str(e)}")
+
     def sizeHint(self):
         return QSize(600, 500)
 
@@ -1287,3 +1733,142 @@ class SettingsPage(QWidget):
             return bool(widget.objectName() or True)
         except (RuntimeError, AttributeError, Exception):
             return False
+
+    def _update_memory_info(self):
+        try:
+            if not hasattr(self, 'ram_manager'):
+                return
+                
+            # 如果启用了自动RAM设置，重新计算最佳RAM值
+            if self.ram_manager.get_auto_ram():
+                optimal_ram = self.ram_manager.calculate_optimal_ram()
+                
+                # 更新RAM值显示
+                if hasattr(self, 'ram_value') and self._is_widget_valid(self.ram_value):
+                    self.ram_value.setText(f"{optimal_ram} MB")
+                
+                # 更新RAM滑块值（不触发valueChanged信号）
+                if hasattr(self, 'ram_slider') and self._is_widget_valid(self.ram_slider):
+                    self.ram_slider.blockSignals(True)
+                    self.ram_slider.setValue(optimal_ram)
+                    self.ram_slider.blockSignals(False)
+                
+                # 更新设置字典和RAM管理器中的值（但不保存到配置文件，避免频繁写入）
+                if self.settings.get('launcher_ram') != optimal_ram:
+                    self.settings['launcher_ram'] = optimal_ram
+                    self.ram_manager.settings['launcher_ram'] = optimal_ram
+                
+            # 更新已使用内存信息和进度条
+            if hasattr(self, 'ram_used_label') and self._is_widget_valid(self.ram_used_label):
+                try:
+                    total_ram = self.ram_manager.get_system_memory()
+                    used_ram = self.ram_manager.get_used_ram()
+                    
+                    # 估算本软件使用的内存（这里假设为50MB，实际应该从系统获取）
+                    app_ram = 50  # 假设本软件使用50MB内存
+                    
+                    # 计算系统其他程序使用的内存
+                    other_ram = used_ram - app_ram if used_ram > app_ram else 0
+                    
+                    self.ram_used_label.setText(f"{i18n.get_text('ram_used')}: {used_ram} MB")
+                    
+                    # 更新已使用内存进度条
+                    if hasattr(self, 'ram_used_progress') and self._is_widget_valid(self.ram_used_progress):
+                        # 系统其他程序使用的内存百分比
+                        other_percent = min(100, int(other_ram / total_ram * 100)) if total_ram > 0 else 0
+                        self.ram_used_progress.setProgress(other_percent)
+                        
+                        # 本软件使用的内存百分比
+                        app_percent = min(100, int(app_ram / total_ram * 100)) if total_ram > 0 else 0
+                        self.ram_used_progress.setAppProgress(app_percent)
+                        
+                        # 设置的RAM值百分比
+                        ram_value = self.ram_manager.get_ram_size()  # 使用RAM管理器获取当前RAM值
+                        ram_percent = min(100, int(ram_value / total_ram * 100)) if total_ram > 0 else 0
+                        self.ram_used_progress.setSecondaryProgress(ram_percent)
+                except Exception as e:
+                    log.error(f"更新已使用内存信息失败: {str(e)}")
+                    
+            # 更新可用内存信息和进度条
+            if hasattr(self, 'ram_available_label') and self._is_widget_valid(self.ram_available_label):
+                try:
+                    available_ram = self.ram_manager.get_available_ram()
+                    self.ram_available_label.setText(f"{i18n.get_text('ram_available')}: {available_ram} MB")
+                    
+                    # 更新可用内存进度条
+                    if hasattr(self, 'ram_available_progress') and self._is_widget_valid(self.ram_available_progress):
+                        total_ram = self.ram_manager.get_system_memory()
+                        available_percent = min(100, int(available_ram / total_ram * 100)) if total_ram > 0 else 0
+                        self.ram_available_progress.setProgress(available_percent)
+                except Exception as e:
+                    log.error(f"获取可用内存信息失败: {str(e)}")
+                    self.ram_available_label.setText(f"{i18n.get_text('ram_available')}: -- MB")
+                    if hasattr(self, 'ram_available_progress') and self._is_widget_valid(self.ram_available_progress):
+                        self.ram_available_progress.setProgress(0)
+        except Exception as e:
+            log.error(f"更新内存信息失败: {str(e)}")
+
+    def on_auto_ram_changed(self, state):
+        try:
+            if hasattr(self, 'ram_manager'):
+                # 设置自动RAM状态
+                self.ram_manager.set_auto_ram(bool(state))
+                
+                # 更新RAM滑块状态
+                if hasattr(self, 'ram_slider') and self._is_widget_valid(self.ram_slider):
+                    self.ram_slider.setEnabled(not bool(state))
+                    
+                    # 如果启用了自动RAM，更新滑块值为计算出的最佳值
+                    if bool(state):
+                        optimal_ram = self.ram_manager.calculate_optimal_ram()
+                        self.ram_slider.setValue(optimal_ram)
+                        if hasattr(self, 'ram_value') and self._is_widget_valid(self.ram_value):
+                            self.ram_value.setText(f"{optimal_ram} MB")
+                
+                # 显示通知
+                if hasattr(self.window(), 'show_notification'):
+                    if bool(state):
+                        self.window().show_notification(
+                            text=i18n.get_text("auto_ram_enabled"),
+                            type=NotificationType.INFO,
+                            duration=2000
+                        )
+                    else:
+                        self.window().show_notification(
+                            text=i18n.get_text("auto_ram_disabled"),
+                            type=NotificationType.INFO,
+                            duration=2000
+                        )
+        except Exception as e:
+            log.error(f"设置自动RAM状态时出错: {str(e)}")
+
+    def _on_ram_value_changed(self, value):
+        try:
+            # 更新RAM值显示
+            if hasattr(self, 'ram_value') and self._is_widget_valid(self.ram_value):
+                self.ram_value.setText(f"{value} MB")
+                
+            # 更新RAM滑块值（不触发valueChanged信号）
+            if hasattr(self, 'ram_slider') and self._is_widget_valid(self.ram_slider):
+                self.ram_slider.blockSignals(True)
+                self.ram_slider.setValue(value)
+                self.ram_slider.blockSignals(False)
+                
+            # 更新进度条
+            self._update_memory_info()
+        except Exception as e:
+            log.error(f"更新RAM值显示时出错: {str(e)}")
+            
+    def _on_auto_ram_state_changed(self, enabled):
+        try:
+            # 更新自动RAM开关状态（不触发stateChanged信号）
+            if hasattr(self, 'auto_ram_switch') and self._is_widget_valid(self.auto_ram_switch):
+                self.auto_ram_switch.blockSignals(True)
+                self.auto_ram_switch.set_checked(enabled)
+                self.auto_ram_switch.blockSignals(False)
+                
+            # 更新RAM滑块状态
+            if hasattr(self, 'ram_slider') and self._is_widget_valid(self.ram_slider):
+                self.ram_slider.setEnabled(not enabled)
+        except Exception as e:
+            log.error(f"更新自动RAM状态显示时出错: {str(e)}")
