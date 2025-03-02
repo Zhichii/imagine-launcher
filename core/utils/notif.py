@@ -47,14 +47,14 @@ class NotificationType:
     ERROR = "错误"
     FAILED = "失败"
 
-# 通知样式映射
+# 更新通知样式，使用Mica风格的颜色
 NOTIFICATION_STYLES = {
-    NotificationType.INFO: ("#1A73E8", "rgba(26, 115, 232, 0.05)", "rgba(26, 115, 232, 0.1)"),
-    NotificationType.TIPS: ("#1A73E8", "rgba(26, 115, 232, 0.05)", "rgba(26, 115, 232, 0.1)"),
-    NotificationType.WARNING: ("#F9A825", "rgba(249, 168, 37, 0.05)", "rgba(249, 168, 37, 0.1)"),
-    NotificationType.WARN: ("#F9A825", "rgba(249, 168, 37, 0.05)", "rgba(249, 168, 37, 0.1)"),
-    NotificationType.ERROR: ("#D93025", "rgba(217, 48, 37, 0.05)", "rgba(217, 48, 37, 0.1)"),
-    NotificationType.FAILED: ("#D93025", "rgba(217, 48, 37, 0.05)", "rgba(217, 48, 37, 0.1)")
+    NotificationType.INFO: ("#0D6EFD", "rgba(13, 110, 253, 0.5)"),
+    NotificationType.TIPS: ("#0D6EFD", "rgba(13, 110, 253, 0.5)"),
+    NotificationType.WARNING: ("#FFC107", "rgba(255, 193, 7, 0.5)"),
+    NotificationType.WARN: ("#FFC107", "rgba(255, 193, 7, 0.5)"),
+    NotificationType.ERROR: ("#DC3545", "rgba(220, 53, 69, 0.5)"),
+    NotificationType.FAILED: ("#DC3545", "rgba(220, 53, 69, 0.5)")
 }
 
 # 图标映射
@@ -96,9 +96,9 @@ class Notification(NotificationAnimation):
             self.setAttribute(Qt.WA_ShowWithoutActivating)
             
             # 动画时长设置
-            self.show_animation_duration = 1000
-            self.hide_animation_duration = 800
-            self.adjust_animation_duration = 600
+            self.show_animation_duration = 800
+            self.hide_animation_duration = 600
+            self.adjust_animation_duration = 500
             
             # 保存参数
             self.text = text
@@ -130,14 +130,14 @@ class Notification(NotificationAnimation):
 
     def _init_ui(self):
         # 获取通知样式
-        text_color, bg_color, hover_color = NOTIFICATION_STYLES.get(
+        text_color, highlight_color = NOTIFICATION_STYLES.get(
             self.notification_type, 
             NOTIFICATION_STYLES[NotificationType.TIPS]
         )
         
         # 创建布局
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 12)
+        layout.setContentsMargins(14, 10, 14, 10)
         layout.setSpacing(4)
         
         # 创建标题和内容标签
@@ -145,11 +145,11 @@ class Notification(NotificationAnimation):
         
         # 创建水平布局用于图标和标题
         title_layout = QHBoxLayout()
-        title_layout.setSpacing(8)
+        title_layout.setSpacing(10)
         
         # 添加图标标签
         self.icon_label = QLabel()
-        self.font_manager.apply_icon_font(self.icon_label, 20)
+        self.font_manager.apply_icon_font(self.icon_label, 22)
         
         # 设置图标
         self.icon_label.setText(self.font_manager.get_icon_text(self.icon_name))
@@ -161,10 +161,10 @@ class Notification(NotificationAnimation):
         
         # 使用字体管理器，调整字体粗细
         self.font_pages_manager.apply_subtitle_style(self.title_label)
-        self.title_label.setStyleSheet(f"color: {text_color}; font-weight: 500;")
+        self.title_label.setStyleSheet(f"color: {text_color}; font-weight: 600;")
         
         self.font_pages_manager.apply_normal_style(self.text_label)
-        self.text_label.setStyleSheet("color: #FFFFFF;")
+        self.text_label.setStyleSheet("color: rgba(255, 255, 255, 0.95);")
         
         # 添加图标和标题到水平布局
         title_layout.addWidget(self.icon_label)
@@ -173,8 +173,8 @@ class Notification(NotificationAnimation):
 
         # 创建水平布局用于图标和内容
         content_layout = QHBoxLayout()
-        content_layout.setSpacing(10)
-        content_layout.setContentsMargins(12, 10, 12, 10)
+        content_layout.setSpacing(12)
+        content_layout.setContentsMargins(10, 8, 10, 8)
 
         # 创建左侧颜色条
         color_bar = QWidget()
@@ -188,7 +188,7 @@ class Notification(NotificationAnimation):
         content_widget = QWidget()
         content_widget_layout = QVBoxLayout(content_widget)
         content_widget_layout.setContentsMargins(0, 0, 0, 0)
-        content_widget_layout.setSpacing(4)
+        content_widget_layout.setSpacing(6)
         content_widget_layout.addLayout(title_layout) 
         content_widget_layout.addWidget(self.text_label)
         
@@ -199,12 +199,12 @@ class Notification(NotificationAnimation):
         # 将水平布局添加到主布局
         layout.addLayout(content_layout)
         
-        # 设置样式
+        # 设置Mica云母效果样式（仿制品）
         self.setStyleSheet(f"""
             QWidget {{
-                background-color: {bg_color};
-                border-radius: 12px;
-                border: 1px solid rgba(0, 0, 0, 0.08);
+                background-color: rgba(32, 32, 32, 0.65);
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
             }}
             QLabel {{
                 background: transparent;
@@ -217,16 +217,16 @@ class Notification(NotificationAnimation):
         
         # 设置固定宽度和最大高度
         self.setFixedWidth(360)
-        self.setMaximumHeight(150)
+        self.setMaximumHeight(160)
         
         # 设置窗口透明度
-        self.setWindowOpacity(1.0)
+        self.setWindowOpacity(0.95)
         
         # 添加阴影效果
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 40))
-        shadow.setOffset(0, 4)
+        shadow.setColor(QColor(0, 0, 0, 50))
+        shadow.setOffset(0, 2)
         self.setGraphicsEffect(shadow)
         
     def show_notification(self):
@@ -242,7 +242,7 @@ class Notification(NotificationAnimation):
             screen = QApplication.primaryScreen().availableGeometry()
             
             # 计算基础位置
-            margin = 20
+            margin = 25
             start_x = screen.right() - self.width() - margin
             
             # 修改这里：限制最大偏移量，防止超出系统限制
@@ -305,7 +305,7 @@ class Notification(NotificationAnimation):
                 
             # 计算隐藏动画的位置
             screen = QApplication.primaryScreen().availableGeometry()
-            margin = 8
+            margin = 25  # 与显示通知边距保持一致
             start_x = screen.right() - self.width() - margin
             current_y = self.y()
             end_y = current_y - self.height() - margin  # 向上滑出
@@ -342,7 +342,7 @@ class Notification(NotificationAnimation):
 
     def _adjust_other_notifications(self, start_index):
         screen = QApplication.primaryScreen().availableGeometry()
-        margin = 20
+        margin = 25  # 与其他边距保持一致
         total_height = self.height() + margin
         
         # 修改这里：只调整可见的通知，并限制最大数量

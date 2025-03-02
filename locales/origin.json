@@ -173,5 +173,22 @@
     "navigating_to": "navigating_to",
     "page_suffix": "page_suffix",
     "opening_game_folder": "opening_game_folder",
-    "launcher_app_title": "launcher_app_title"
+    "launcher_app_title": "launcher_app_title",
+    "ram_settings": "ram_settings",
+    "auto_ram_enabled": "auto_ram_enabled",
+    "auto_ram_disabled": "auto_ram_disabled",
+    "ram_allocation": "ram_allocation",
+    "ram_allocation_desc": "ram_allocation_desc",
+    "ram_min": "ram_min",
+    "ram_max": "ram_max",
+    "ram_current": "ram_current",
+    "ram_optimal": "ram_optimal",
+    "ram_warning": "ram_warning",
+    "ram_info": "ram_info",
+    "ram_info_desc": "ram_info_desc",
+    "ram_update_error": "ram_update_error",
+    "ram_update_success": "ram_update_success",
+    "ram_slider_tip": "ram_slider_tip",
+    "ram_auto_tip": "ram_auto_tip",
+    "ram_manual_tip": "ram_manual_tip"
 } 

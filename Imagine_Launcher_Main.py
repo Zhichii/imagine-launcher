@@ -1,7 +1,6 @@
 '''
 入口程序
 '''
-
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Qt, QTimer, QSize
 from PySide6.QtGui import QIcon, QWindow
@@ -34,7 +33,7 @@ class MainWindow(QMainWindow):
         
         # 设置应用图标
         resource_manager = ResourceManager()
-        icon = resource_manager.get_icon("logo_256")
+        icon = resource_manager.get_icon("logo_256")# logo 256 fix 
         if icon:
             # 设置窗口图标
             self.setWindowIcon(icon)

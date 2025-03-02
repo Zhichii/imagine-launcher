@@ -1,4 +1,13 @@
 {
     "language": "zh",
-    "background_effect": "effect_mica"
+    "theme": "light",
+    "background_effect": "effect_blur",
+    "font_size": 12,
+    "auto_update": true,
+    "auto_start": false,
+    "log_level": "info",
+    "api_key": "",
+    "auto_save": true,
+    "save_path": "C:\\Users\\bugju\\Downloads\\.minecraft",
+    "launcher_ram": 1145
 }

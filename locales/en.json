@@ -203,5 +203,22 @@
     "navigating_to": "Navigating to",
     "page_suffix": "Page",
     "opening_game_folder": "Opening Game Folder",
-    "launcher_app_title": "Imagine Home"
+    "launcher_app_title": "Imagine Home",
+    "ram_settings": "RAM Settings",
+    "auto_ram_enabled": "Auto RAM allocation enabled",
+    "auto_ram_disabled": "Auto RAM allocation disabled",
+    "ram_allocation": "RAM Allocation",
+    "ram_allocation_desc": "Adjust memory allocation for game launch",
+    "ram_min": "Minimum RAM",
+    "ram_max": "Maximum RAM",
+    "ram_current": "Current Allocation",
+    "ram_optimal": "Optimal Allocation",
+    "ram_warning": "Excessive RAM allocation may cause game lag",
+    "ram_info": "Memory Information",
+    "ram_info_desc": "Display system memory usage",
+    "ram_update_error": "Failed to update memory settings",
+    "ram_update_success": "Memory settings updated",
+    "ram_slider_tip": "Drag slider to adjust memory size",
+    "ram_auto_tip": "Auto RAM allocation enabled, slider disabled",
+    "ram_manual_tip": "Manual memory setting, please allocate reasonably based on system conditions"
 } 
