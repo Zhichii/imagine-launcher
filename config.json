@@ -1,13 +1,27 @@
 {
-    "language": "zh",
-    "theme": "light",
-    "background_effect": "effect_blur",
-    "font_size": 12,
-    "auto_update": true,
-    "auto_start": false,
-    "log_level": "info",
-    "api_key": "",
-    "auto_save": true,
-    "save_path": "C:\\Users\\bugju\\Downloads\\.minecraft",
-    "launcher_ram": 1145
+  "app": {
+    "name": "ImagineLauncher",
+    "version": "0.0.1",
+    "uiFrameworkVersion": "1.0.1",
+    "channel": "Alpha",
+    "language": "zh-CN"
+  },
+  "window": {
+    "width": 1000,
+    "height": 600,
+    "minWidth": 800,
+    "minHeight": 500,
+    "borderRadius": true,
+    "radiusSize": 12
+  },
+  "ui": {
+    "scrollbar": false,
+    "titlebarHeight": 48,
+    "animations": true
+  },
+  "theme": {
+    "preset": "pink",
+    "accentColor": "#d7bbec",
+    "gradientColors": ["#d7bbec", "#e4bbec", "#ecbbe8", "#ecbbdc", "#ecbbcf"]
+  }
 }

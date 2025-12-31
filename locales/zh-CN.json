@@ -1,0 +1,175 @@
+{
+  "app": {
+    "name": "ImagineLauncher"
+  },
+  "nav": {
+    "home": "首页",
+    "instances": "实例",
+    "downloads": "下载",
+    "skins": "皮肤",
+    "mods": "模组",
+    "resourcepacks": "资源包",
+    "worlds": "存档",
+    "settings": "设置",
+    "about": "关于"
+  },
+  "search": {
+    "placeholder": "搜索游戏、模组..."
+  },
+  "user": {
+    "player": "玩家",
+    "online": "在线",
+    "offline": "离线"
+  },
+  "home": {
+    "welcome": "欢迎回来",
+    "subtitle": "准备好开始新的冒险了吗？",
+    "launch": "启动游戏",
+    "quickActions": {
+      "newInstance": "新建实例",
+      "newInstanceDesc": "创建游戏配置",
+      "downloadMods": "下载模组",
+      "downloadModsDesc": "浏览热门模组",
+      "checkUpdate": "检查更新",
+      "checkUpdateDesc": "获取最新版本",
+      "multiplayer": "多人游戏",
+      "multiplayerDesc": "加入服务器"
+    },
+    "recentPlay": "最近游玩",
+    "viewAll": "查看全部",
+    "news": "新闻动态",
+    "more": "更多",
+    "lastPlayed": "最后游玩",
+    "hoursAgo": "小时前",
+    "yesterday": "昨天",
+    "daysAgo": "天前"
+  },
+  "instances": {
+    "title": "游戏实例",
+    "description": "管理你的 Minecraft 游戏实例",
+    "vanilla": "原版",
+    "forge": "Forge",
+    "fabric": "Fabric"
+  },
+  "downloads": {
+    "title": "下载中心",
+    "description": "下载游戏版本和资源"
+  },
+  "skins": {
+    "title": "皮肤管理",
+    "description": "自定义你的游戏角色"
+  },
+  "mods": {
+    "title": "模组",
+    "description": "浏览和安装模组"
+  },
+  "resourcepacks": {
+    "title": "资源包",
+    "description": "美化你的游戏世界"
+  },
+  "worlds": {
+    "title": "存档",
+    "description": "管理游戏存档"
+  },
+  "settings": {
+    "title": "设置",
+    "back": "返回",
+    "general": "常规",
+    "language": "语言",
+    "window": "窗口",
+    "roundedWindow": "圆角窗口",
+    "cornerRadius": "圆角大小",
+    "windowWidth": "窗口宽度",
+    "windowHeight": "窗口高度",
+    "appearance": "外观",
+    "interface": "界面设置",
+    "showScrollbar": "显示滚动条",
+    "animations": "动画效果",
+    "theme": "主题",
+    "themePreset": "预设主题",
+    "accentColor": "强调色",
+    "preview": "预览",
+    "reset": "恢复默认",
+    "save": "保存设置",
+    "saved": "设置已保存",
+    "resetDone": "已恢复默认设置",
+    "saveFailed": "保存失败"
+  },
+  "about": {
+    "title": "关于",
+    "tagline": "开启你的 Minecraft 冒险之旅",
+    "softwareVersion": "软件版本",
+    "uiFrameworkVersion": "UI 框架",
+    "developer": "开发者",
+    "license": "许可证",
+    "channelInfo": "版本通道",
+    "release": "稳定版",
+    "releaseDesc": "经过完整测试",
+    "beta": "测试版",
+    "betaDesc": "可能存在小问题",
+    "alpha": "早期版",
+    "alphaDesc": "功能开发中",
+    "devInfo": "开发信息",
+    "poweredBy": "Powered by ZZBuAoYe",
+    "openSource": "开源项目",
+    "madeFor": "为 Minecraft 玩家打造",
+    "i18nSupport": "多语言支持",
+    "copyright": "© 2024 ImagineLauncher. All rights reserved."
+  },
+  "notification": {
+    "launching": "正在启动游戏...",
+    "launchingInstance": "正在启动"
+  },
+  "account": {
+    "title": "账户",
+    "back": "返回",
+    "noAccount": "未登录",
+    "accountType": "账户类型",
+    "microsoftDesc": "正版账户",
+    "offline": "离线模式",
+    "offlineDesc": "本地游玩",
+    "actions": "账户操作",
+    "refresh": "刷新账户",
+    "refreshDesc": "同步账户信息",
+    "refreshing": "正在刷新...",
+    "refreshSuccess": "刷新成功",
+    "refreshFailed": "刷新失败",
+    "offlineNoRefresh": "离线账户无需刷新",
+    "noAccountToRefresh": "没有可刷新的账户",
+    "addAccount": "添加账户",
+    "addAccountDesc": "登录新账户",
+    "addOffline": "添加离线账户",
+    "addSuccess": "添加成功",
+    "addFailed": "添加失败",
+    "username": "用户名",
+    "usernamePlaceholder": "输入游戏内显示的名称",
+    "usernameHint": "3-16个字符",
+    "usernameInvalid": "用户名至少需要3个字符",
+    "switchAccount": "切换账户",
+    "switchAccountDesc": "选择其他账户",
+    "switchSuccess": "切换成功",
+    "switchFailed": "切换失败",
+    "noAccounts": "没有可切换的账户",
+    "logout": "退出登录",
+    "logoutDesc": "注销当前账户",
+    "confirmLogout": "确认退出",
+    "logoutMessage": "确定要退出当前账户吗？",
+    "logoutSuccess": "已退出",
+    "logoutFailed": "退出失败",
+    "noAccountToLogout": "没有可退出的账户",
+    "loggingIn": "正在打开登录页面...",
+    "loginSuccess": "登录成功",
+    "loginFailed": "登录失败",
+    "skinPreview": "皮肤预览",
+    "noSkin": "暂无皮肤",
+    "changeSkin": "更换皮肤",
+    "skinChanged": "皮肤已更换",
+    "skinChangeFailed": "更换失败",
+    "noAccountForSkin": "请先登录账户",
+    "microsoftSkinHint": "微软账户请在官网更换皮肤"
+  },
+  "common": {
+    "cancel": "取消",
+    "confirm": "确定"
+  }
+}

@@ -1,78 +1,117 @@
-<div align="center">
-  <img src="./resources/logo.png" alt="Imagine Launcher Logo" width="200">
-</div>
+# ImagineLauncher
 
-## 🌟 Imagine Launcher For Minecraft
-> Designed for Minecraft, Imagine Launcher is a simple and easy-to-use Minecraft launcher.
-> An innovative Minecraft launcher made with Python
+一个 Minecraft 启动器，支持微软账户登录和离线模式。
 
-🚀 一个简单易用的Minecraft启动器
+## 特性
 
-### ✨ 特性
-- 🎯 支持多版本Minecraft启动
-- 👤 支持正版登录和离线登录
-- ☕ 支持自定义Java路径
-- 💾 支持自定义内存分配
-- 🔧 支持Mod加载和管理
-- 🎨 界面简洁美观
+- 支持微软账户登录（正版验证）
+- 支持离线账户
+- 现代化 UI 设计
+- 多语言支持（中文/英文）
+- 自动提取皮肤头像
+- 可自定义主题和设置
 
-### 📖 使用方法
-1. 📥 下载最新版本的启动器
-2. ▶️ 运行启动器
-3. 🎮 选择要启动的Minecraft版本
-4. 🚀 点击启动即可开始游戏
+## 安装
 
-### 📊 开发进度
-- [√] 🎨 基础界面设计
-- [√] 📋 版本选择功能
-- [√] 🌍 国际化
-- [√] ⚙️ 设置界面
-- [ ] 👥 账户系统
-- [ ] 🔧 Mod管理系统
-- [ ] 📥 下载功能
-- [ ] 🎮 游戏性能优化
-- [ ] 🔄 自动更新系统
+### 前置要求
 
-### 🔧 系统要求
-- 💻 操作系统：Windows 10/11, 不支持10以下的操作系统
-- 📱 处理器：无需求
-- 💾 内存：正常电脑都能跑
-- 💿 存储空间：至少 1 GB
-- ☕ Java：本项目基于Python不依赖Java，你也无须安装Python
-- 🌐 网络连接：可以离线
-- 🔑 构建指南: ClutUI 使用 Python 3.12.6
-### 📥 安装指南
-1. 从 [Releases](https://github.com/Zhichii/imagine-launcher/releases) 页面下载最新版本
-2. 解压下载的文件到任意目录
-3. 运行 `imagine-launcher.exe`Windows
-> Tips: 目前只支持Windows系统，其他系统暂不支持
+- Node.js 16+ 
+- npm 或 yarn
 
+### 安装依赖
 
-### 🛠️ 技术栈
-- 🐍 [Python](https://www.python.org) 
-- 🖼️ [Pyside6](https://qt.io/)
-- ✨ [ClutUI NextGen](https://github.com/buaoyezz/ClutUI-NextGen)
+```bash
+npm install
+```
 
+### 开发模式运行
 
-### 🤝 贡献
-欢迎提交Issue和Pull Request！以下是参与项目的方式：
+```bash
+npm start
+```
 
+### 打包应用
 
-### 📜 许可证
-本项目采用 GPLv3 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+```bash
+npm run build
+```
 
-### 📧 联系我们
-- 项目主页：[GitHub](https://github.com/Zhichii/imagine-launcher)
-- 问题反馈：[Issues](https://github.com/Zhichii/imagine-launcher/issues)
-- 电子邮件：BiliBili
+## 配置
 
-### 🌟 致谢
-感谢以下项目：
-- [Python](https://www.python.org)
-- [PySide6](https://qt.io)
-- [ClutUI NextGen](https://github.com/buaoyezz/ClutUI-NextGen)
+### 使用官方 Client ID（推荐）
 
-### ✨ 关于界面声明
-> 本项目使用 [ClutUI NextGen](https://github.com/buaoyezz/ClutUI-NextGen) 构建的界面
-> 使用Pyside6完成开发工作
-> 与界面有关的文献/*版权**请查看`ClutUI`的项目链接，而不是本项目的
+默认配置使用 Minecraft 官方 Client ID，无需额外配置即可使用。
+
+### 使用自定义 Client ID
+
+如果你想使用自己的 Azure AD 应用：
+
+1. 复制 `.env.example` 为 `.env`
+2. 在 `.env` 中填入你的配置：
+   ```
+   AZURE_CLIENT_ID=你的ClientID
+   REDIRECT_URI=你的重定向URI
+   CUSTOM_PROTOCOL=你的自定义协议
+   ```
+
+**注意**: 使用自定义 Client ID 需要向 Microsoft 申请 Minecraft Services API 访问权限。（本项目不提供自己的ClientID）
+
+## 项目结构
+
+```
+ImagineLauncher/
+├── assets/              # 资源文件
+│   └── resources/       # 图标、Logo 等
+├── locales/             # 多语言文件
+│   ├── en-US.json
+│   └── zh-CN.json
+├── pages/               # 页面组件
+│   ├── home_page/       # 主页
+│   ├── account_page/    # 账户管理
+│   ├── settings_pages/  # 设置页面
+│   └── about_page/      # 关于页面
+├── main.js              # Electron 主进程
+├── index.html           # 主窗口
+├── script.js            # 主窗口脚本
+├── styles.css           # 全局样式
+├── config.json          # 应用配置
+└── package.json         # 项目配置
+```
+
+## 功能说明
+
+### 账户管理
+
+- **微软账户登录**: 支持正版 Minecraft Java 版账户
+- **离线账户**: 本地游玩，无需正版验证
+- **账户切换**: 支持多账户管理和快速切换
+- **皮肤管理**: 自动获取和显示玩家皮肤
+
+### 设置
+
+- **主题自定义**: 多种预设主题和自定义颜色
+- **语言切换**: 中文/英文界面
+- **窗口设置**: 自定义窗口大小和圆角
+- **UI 选项**: 滚动条、动画等界面选项
+
+## 安全说明
+
+- Client ID 等敏感信息通过环境变量管理
+- 不要将 `.env` 文件提交到 Git
+- 账户数据本地加密存储
+
+## 许可证
+
+MIT License
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 联系方式
+
+如有问题或建议，请提交 Issue。
+
+---
+
+**注意**: 本项目仅供学习交流使用，请支持正版游戏。

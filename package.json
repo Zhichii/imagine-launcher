@@ -1,0 +1,27 @@
+{
+  "name": "imagine-launcher",
+  "version": "0.0.1",
+  "description": "ImagineLauncher - Modern Minecraft Launcher",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder"
+  },
+  "keywords": [
+    "electron",
+    "minecraft",
+    "launcher",
+    "liquid-glass"
+  ],
+  "author": "ZZBuAoYe",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "sharp": "^0.32.6"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}

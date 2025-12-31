@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImagineLauncher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="rounded-window">
+  <div class="window-container">
+    <!-- Blur 蒙版 -->
+    <div class="blur-overlay"></div>
+    
+    <div class="app-layout">
+      <!-- 侧边栏 -->
+      <nav class="sidebar">
+        <div class="sidebar-header">
+          <img src="assets/resources/logo_256.png" alt="Logo" class="logo-img">
+          <span class="logo-text" data-i18n="app.name">ImagineLauncher</span>
+        </div>
+
+        <div class="nav-group">
+          <button class="nav-btn active" data-page="home">
+            <i class="ri-home-4-line"></i>
+            <span data-i18n="nav.home">首页</span>
+          </button>
+          <button class="nav-btn" data-page="instances">
+            <i class="ri-stack-line"></i>
+            <span data-i18n="nav.instances">实例</span>
+          </button>
+          <button class="nav-btn" data-page="downloads">
+            <i class="ri-download-2-line"></i>
+            <span data-i18n="nav.downloads">下载</span>
+          </button>
+        </div>
+        
+        <div class="nav-group">
+          <button class="nav-btn" data-page="mods">
+            <i class="ri-puzzle-2-line"></i>
+            <span data-i18n="nav.mods">模组</span>
+          </button>
+          <button class="nav-btn" data-page="resourcepacks">
+            <i class="ri-palette-line"></i>
+            <span data-i18n="nav.resourcepacks">资源包</span>
+          </button>
+          <button class="nav-btn" data-page="skins">
+            <i class="ri-user-smile-line"></i>
+            <span data-i18n="nav.skins">皮肤</span>
+          </button>
+        </div>
+
+        <div class="nav-group nav-footer">
+          <button class="nav-btn" data-page="settings">
+            <i class="ri-settings-4-line"></i>
+            <span data-i18n="nav.settings">设置</span>
+          </button>
+          <button class="nav-btn" data-page="about">
+            <i class="ri-information-line"></i>
+            <span data-i18n="nav.about">关于</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- 右侧区域 -->
+      <div class="main-area">
+        <!-- 标题栏 -->
+        <div class="titlebar">
+          <div class="titlebar-left">
+            <h1 class="page-title" data-i18n="nav.home">首页</h1>
+          </div>
+          
+          <div class="titlebar-center hidden">
+            <div class="search-box">
+              <i class="ri-search-line"></i>
+              <input type="text" data-i18n-placeholder="search.placeholder" placeholder="搜索...">
+            </div>
+          </div>
+
+          <div class="titlebar-right">
+            <button class="icon-btn" title="通知">
+              <i class="ri-notification-4-line"></i>
+            </button>
+            <div class="user-pill">
+              <div class="user-avatar">
+                <i class="ri-user-line"></i>
+              </div>
+              <span class="user-name" data-i18n="user.player">玩家</span>
+              <span class="status-dot"></span>
+            </div>
+          </div>
+
+          <div class="window-controls">
+            <button class="win-btn" id="minimize"><i class="ri-subtract-line"></i></button>
+            <button class="win-btn" id="maximize"><i class="ri-checkbox-blank-line"></i></button>
+            <button class="win-btn close" id="close"><i class="ri-close-line"></i></button>
+          </div>
+        </div>
+
+        <!-- 内容区 -->
+        <main class="content">
+          <section class="page active" id="home-page">
+            <iframe src="pages/home_page/home.html"></iframe>
+          </section>
+          <section class="page" id="about-page">
+            <iframe src="pages/about_page/about.html"></iframe>
+          </section>
+          <section class="page" id="settings-page">
+            <iframe src="pages/settings_pages/settings.html"></iframe>
+          </section>
+          <section class="page" id="instances-page">
+            <div class="page-inner"><div class="empty-state"><i class="ri-stack-line"></i><h2 data-i18n="instances.title">游戏实例</h2><p data-i18n="instances.description">管理你的 Minecraft 游戏实例</p></div></div>
+          </section>
+          <section class="page" id="downloads-page">
+            <div class="page-inner"><div class="empty-state"><i class="ri-download-2-line"></i><h2 data-i18n="downloads.title">下载中心</h2><p data-i18n="downloads.description">下载游戏版本和资源</p></div></div>
+          </section>
+          <section class="page" id="skins-page">
+            <div class="page-inner"><div class="empty-state"><i class="ri-user-smile-line"></i><h2 data-i18n="skins.title">皮肤管理</h2><p data-i18n="skins.description">自定义你的游戏角色</p></div></div>
+          </section>
+          <section class="page" id="mods-page">
+            <div class="page-inner"><div class="empty-state"><i class="ri-puzzle-2-line"></i><h2 data-i18n="mods.title">模组</h2><p data-i18n="mods.description">浏览和安装模组</p></div></div>
+          </section>
+          <section class="page" id="resourcepacks-page">
+            <div class="page-inner"><div class="empty-state"><i class="ri-palette-line"></i><h2 data-i18n="resourcepacks.title">资源包</h2><p data-i18n="resourcepacks.description">美化你的游戏世界</p></div></div>
+          </section>
+          <section class="page" id="account-page">
+            <iframe src="pages/account_page/account.html"></iframe>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
