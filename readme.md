@@ -31,4 +31,4 @@ npm run build
   
 ## License
 
-GPPLv3 License - see [LICENSE](LICENSE) for details.
+GPLv3 License - see [LICENSE](LICENSE) for details.
