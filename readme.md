@@ -1,17 +1,7 @@
 # ImagineLauncher
 
-Modern Minecraft Launcher built with Tauri.
-
-## Features
-
-- 🎮 Launch Minecraft (Vanilla, Forge, Fabric, Quilt, NeoForge)
-- 🔐 Microsoft Account Login
-- 👤 Offline Mode Support
-- ☕ Auto Java Detection
-- 🎨 Modern UI with Liquid Glass Design
-- 🌍 Multi-language Support (zh-CN, en-US)
-- 📦 Version Management
-- 🖼️ Skin Management
+Hey,Welcome Use Imagine Launcher
+> A Modern Minecraft Launcher built with Tauri.
 
 ## Development
 
@@ -38,8 +28,7 @@ npm run build
 
 - **Frontend**: HTML, CSS, JavaScript
 - **Backend**: Rust (Tauri)
-- **UI Framework**: Custom Liquid Glass Design
-
+  
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+GPPLv3 License - see [LICENSE](LICENSE) for details.
