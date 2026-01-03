@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关于</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../tauri-bridge.js"></script>
+</head>
+<body>
+  <div class="about-page">
+    <!-- 品牌区域 -->
+    <div class="brand-section">
+      <div class="brand-info">
+        <div class="brand-logo">
+          <img src="../../assets/assets/resources/logo_256.png" alt="Logo">
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-name">ImagineLauncher</h1>
+          <p class="brand-tagline" data-i18n="about.tagline">开启你的 Minecraft 冒险之旅</p>
+        </div>
+      </div>
+      <div class="social-links">
+        <a href="#" class="social-btn" title="GitHub"><i class="ri-github-fill"></i></a>
+        <a href="#" class="social-btn" title="Discord"><i class="ri-discord-fill"></i></a>
+        <a href="#" class="social-btn" title="Bilibili"><i class="ri-bilibili-fill"></i></a>
+      </div>
+    </div>
+
+    <!-- 版本信息卡片 -->
+    <div class="version-cards">
+      <div class="version-card">
+        <div class="version-card-header">
+          <div class="version-icon software"><i class="ri-rocket-2-line"></i></div>
+          <span class="version-tag alpha" id="version-channel">Alpha</span>
+        </div>
+        <div class="version-card-body">
+          <span class="version-label" data-i18n="about.softwareVersion">软件版本</span>
+          <span class="version-value" id="software-version">1.0.0</span>
+        </div>
+      </div>
+
+      <div class="version-card">
+        <div class="version-card-header">
+          <div class="version-icon framework"><i class="ri-code-s-slash-line"></i></div>
+          <span class="version-tag stable">Stable</span>
+        </div>
+        <div class="version-card-body">
+          <span class="version-label" data-i18n="about.uiFrameworkVersion">UI 框架</span>
+          <span class="version-value" id="ui-version">1.0.3</span>
+        </div>
+      </div>
+
+      <div class="version-card">
+        <div class="version-card-header">
+          <div class="version-icon dev"><i class="ri-user-star-line"></i></div>
+        </div>
+        <div class="version-card-body">
+          <span class="version-label" data-i18n="about.developer">开发者</span>
+          <span class="version-value" id="developer">ZZBuAoYe</span>
+        </div>
+      </div>
+
+      <div class="version-card">
+        <div class="version-card-header">
+          <div class="version-icon license"><i class="ri-open-source-line"></i></div>
+        </div>
+        <div class="version-card-body">
+          <span class="version-label" data-i18n="about.license">许可证</span>
+          <span class="version-value">MIT</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content-scroll">
+      <!-- 第一行：版本通道 + 技术栈 -->
+      <div class="content-row">
+        <div class="content-section">
+          <h3 class="section-title">
+            <i class="ri-git-branch-line"></i>
+            <span data-i18n="about.channelInfo">版本通道</span>
+          </h3>
+          <div class="channel-list">
+            <div class="channel-item">
+              <span class="channel-badge release">Release</span>
+              <div class="channel-info">
+                <span class="channel-name" data-i18n="about.release">稳定版</span>
+                <span class="channel-desc" data-i18n="about.releaseDesc">经过完整测试</span>
+              </div>
+            </div>
+            <div class="channel-item">
+              <span class="channel-badge beta">Beta</span>
+              <div class="channel-info">
+                <span class="channel-name" data-i18n="about.beta">测试版</span>
+                <span class="channel-desc" data-i18n="about.betaDesc">可能存在小问题</span>
+              </div>
+            </div>
+            <div class="channel-item">
+              <span class="channel-badge alpha">Alpha</span>
+              <div class="channel-info">
+                <span class="channel-name" data-i18n="about.alpha">早期版</span>
+                <span class="channel-desc" data-i18n="about.alphaDesc">功能开发中</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-section">
+          <h3 class="section-title">
+            <i class="ri-code-box-line"></i>
+            <span data-i18n="about.techStack">技术栈</span>
+          </h3>
+          <div class="tech-grid">
+            <div class="tech-item">
+              <i class="ri-window-line"></i>
+              <span class="tech-name">Tauri 2.0</span>
+            </div>
+            <div class="tech-item">
+              <i class="ri-html5-line"></i>
+              <span class="tech-name">HTML/CSS/JS</span>
+            </div>
+            <div class="tech-item">
+              <i class="ri-file-code-line"></i>
+              <span class="tech-name">Rust</span>
+            </div>
+            <div class="tech-item">
+              <i class="ri-palette-line"></i>
+              <span class="tech-name">Liquid Glass</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第二行：开发信息 + 贡献者 -->
+      <div class="content-row">
+        <div class="content-section">
+          <h3 class="section-title">
+            <i class="ri-information-line"></i>
+            <span data-i18n="about.devInfo">开发信息</span>
+          </h3>
+          <div class="dev-list">
+            <div class="dev-item">
+              <i class="ri-heart-3-line"></i>
+              <span data-i18n="about.madeFor">为 Minecraft 玩家打造</span>
+            </div>
+            <div class="dev-item">
+              <i class="ri-global-line"></i>
+              <span data-i18n="about.i18nSupport">多语言支持</span>
+            </div>
+            <div class="dev-item">
+              <i class="ri-shield-check-line"></i>
+              <span data-i18n="about.openSource">开源免费</span>
+            </div>
+            <div class="dev-item">
+              <i class="ri-refresh-line"></i>
+              <span data-i18n="about.activelyMaintained">持续维护</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-section">
+          <h3 class="section-title">
+            <i class="ri-team-line"></i>
+            <span data-i18n="about.contributors">贡献者</span>
+          </h3>
+          <div class="contributors-grid">
+            <div class="contributor-card">
+              <div class="contributor-avatar">
+                <img src="https://avatars.githubusercontent.com/u/163652202?v=4" alt="ZZBuAoYe">
+              </div>
+              <span class="contributor-name">ZZBuAoYe</span>
+            </div>
+            <!-- 更多贡献者可以动态添加 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="about-footer">
+      <p class="footer-text" data-i18n="about.copyright">© 2024 ImagineLauncher. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#" class="footer-link" data-i18n="about.privacy">隐私政策</a>
+        <a href="#" class="footer-link" data-i18n="about.terms">使用条款</a>
+        <a href="#" class="footer-link" data-i18n="about.changelog">更新日志</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load version loader first, then main script -->
+  <script src="../../version-loader.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

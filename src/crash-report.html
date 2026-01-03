@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>游戏崩溃报告</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --accent: #d7bbec;
+      --red: #ef4444;
+      --orange: #f59e0b;
+      --bg: #1a1a1f;
+      --bg-card: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: rgba(255, 255, 255, 0.95);
+      --text-secondary: rgba(255, 255, 255, 0.6);
+      --text-tertiary: rgba(255, 255, 255, 0.4);
+    }
+    
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text);
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* 标题栏 - 可拖拽 */
+    .titlebar {
+      height: 40px;
+      min-height: 40px;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+      border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+    
+    .titlebar-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    
+    .titlebar-icon i {
+      font-size: 16px;
+      color: var(--red);
+    }
+    
+    .titlebar-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--red);
+    }
+    
+    .titlebar-version {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-right: 12px;
+    }
+    
+    .titlebar-close {
+      -webkit-app-region: no-drag;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    
+    .titlebar-close:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--red);
+    }
+    
+    /* 内容区 - 可滚动 */
+    .content {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    .card-header.reason i { color: var(--red); }
+    .card-header.suggestions i { color: var(--orange); }
+    .card-header.logs i { color: var(--accent); }
+    
+    .card-content {
+      padding: 14px;
+    }
+    
+    .reason-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    
+    .reason-details {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    
+    .suggestions-list {
+      list-style: none;
+    }
+    
+    .suggestions-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      line-height: 1.5;
+    }
+    
+    .suggestions-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .suggestions-list li i {
+      color: var(--accent);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    
+    .logs-toggle {
+      cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    
+    .logs-toggle:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .logs-toggle .arrow {
+      margin-left: auto;
+      transition: transform 0.2s;
+    }
+    
+    .logs-toggle .arrow.open {
+      transform: rotate(180deg);
+    }
+    
+    .logs-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    .logs-content.open {
+      max-height: 300px;
+    }
+    
+    .logs-pre {
+      padding: 12px;
+      margin: 0;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 10px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      background: rgba(0, 0, 0, 0.3);
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      font-size: 10px;
+      color: var(--text-tertiary);
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+    
+    /* 底部按钮 */
+    .footer {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
+    }
+    
+    .btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+    
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+    
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="titlebar">
+      <div class="titlebar-icon">
+        <i class="ri-error-warning-fill"></i>
+      </div>
+      <span class="titlebar-title">游戏崩溃</span>
+      <span class="titlebar-version" id="version-id">-</span>
+      <button class="titlebar-close" id="close-btn">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+    
+    <div class="content">
+      <div class="card">
+        <div class="card-header reason">
+          <i class="ri-bug-line"></i>
+          <span>崩溃原因</span>
+        </div>
+        <div class="card-content">
+          <div class="reason-title" id="crash-reason">未知错误</div>
+          <div class="reason-details" id="crash-details">-</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header suggestions">
+          <i class="ri-lightbulb-line"></i>
+          <span>解决建议</span>
+        </div>
+        <ul class="suggestions-list" id="suggestions-list">
+          <li><i class="ri-arrow-right-s-line"></i>查看完整日志了解详情</li>
+        </ul>
+      </div>
+      
+      <div class="card">
+        <div class="card-header logs logs-toggle" id="logs-toggle">
+          <i class="ri-terminal-box-line"></i>
+          <span>错误日志</span>
+          <i class="ri-arrow-down-s-line arrow" id="logs-arrow"></i>
+        </div>
+        <div class="logs-content" id="logs-content">
+          <pre class="logs-pre" id="logs-pre">无错误日志</pre>
+        </div>
+      </div>
+      
+      <div class="meta-bar">
+        <span id="exit-code">退出码: -</span>
+        <span id="crash-time">-</span>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <button class="btn btn-secondary" id="copy-btn">
+        <i class="ri-file-copy-line"></i>
+        复制报告
+      </button>
+      <button class="btn btn-secondary" id="export-btn">
+        <i class="ri-download-line"></i>
+        导出日志
+      </button>
+      <button class="btn btn-primary" id="close-btn-footer">
+        <i class="ri-close-line"></i>
+        关闭
+      </button>
+    </div>
+  </div>
+  
+  <script>
+    let tauriApi = null;
+    
+    // 等待 Tauri API 加载
+    function waitForTauri() {
+      return new Promise((resolve) => {
+        const check = () => {
+          if (window.__TAURI__) {
+            resolve(window.__TAURI__);
+          } else {
+            setTimeout(check, 50);
+          }
+        };
+        check();
+      });
+    }
+    
+    // 关闭窗口
+    async function closeWindow() {
+      try {
+        if (tauriApi) {
+          // 使用 WebviewWindow 获取当前窗口
+          const { WebviewWindow } = tauriApi.webviewWindow;
+          const win = WebviewWindow.getCurrent();
+          await win.close();
+        }
+      } catch (e) {
+        console.error('Failed to close window:', e);
+        // 备用方案：使用 invoke 调用后端关闭
+        try {
+          await tauriApi.core.invoke('window_close');
+        } catch (e2) {
+          console.error('Backup close also failed:', e2);
+        }
+      }
+    }
+    
+    async function init() {
+      tauriApi = await waitForTauri();
+      console.log('[CrashReport] Tauri API loaded');
+      
+      // 获取崩溃数据
+      try {
+        const crashData = await tauriApi.core.invoke('get_crash_report_data');
+        console.log('[CrashReport] Crash data:', crashData);
+        if (crashData) {
+          displayCrashReport(crashData);
+        }
+      } catch (e) {
+        console.error('Failed to get crash data:', e);
+      }
+      
+      // 关闭按钮
+      document.getElementById('close-btn').addEventListener('click', closeWindow);
+      document.getElementById('close-btn-footer').addEventListener('click', closeWindow);
+      
+      // 日志展开/折叠
+      document.getElementById('logs-toggle').addEventListener('click', () => {
+        document.getElementById('logs-content').classList.toggle('open');
+        document.getElementById('logs-arrow').classList.toggle('open');
+      });
+      
+      // 复制报告
+      document.getElementById('copy-btn').addEventListener('click', copyReport);
+      
+      // 导出日志
+      document.getElementById('export-btn').addEventListener('click', exportLogs);
+    }
+    
+    function displayCrashReport(data) {
+      const { versionId, exitCode, crashInfo, errorLogs } = data;
+      
+      document.getElementById('version-id').textContent = versionId || '-';
+      document.getElementById('crash-reason').textContent = crashInfo?.reason || '未知错误';
+      document.getElementById('crash-details').textContent = crashInfo?.details || '-';
+      document.getElementById('exit-code').textContent = `退出码: ${exitCode}`;
+      document.getElementById('crash-time').textContent = new Date().toLocaleString();
+      
+      // 建议列表
+      const suggestionsList = document.getElementById('suggestions-list');
+      if (crashInfo?.suggestions?.length > 0) {
+        suggestionsList.innerHTML = crashInfo.suggestions.map(s => 
+          `<li><i class="ri-arrow-right-s-line"></i>${escapeHtml(s)}</li>`
+        ).join('');
+      }
+      
+      // 错误日志
+      const logsPre = document.getElementById('logs-pre');
+      if (errorLogs?.length > 0) {
+        logsPre.textContent = errorLogs.join('\n');
+      }
+      
+      // 保存数据用于复制和导出
+      window.crashData = data;
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+    
+    function copyReport() {
+      const data = window.crashData;
+      if (!data) return;
+      
+      const { versionId, exitCode, crashInfo, errorLogs } = data;
+      const text = [
+        '=== Minecraft 崩溃报告 ===',
+        `版本: ${versionId}`,
+        `时间: ${new Date().toLocaleString()}`,
+        `退出码: ${exitCode}`,
+        '',
+        '=== 崩溃原因 ===',
+        crashInfo?.reason || '未知',
+        crashInfo?.details || '',
+        '',
+        '=== 解决建议 ===',
+        ...(crashInfo?.suggestions || []).map(s => `- ${s}`),
+        '',
+        '=== 错误日志 ===',
+        ...(errorLogs || [])
+      ].join('\n');
+      
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copy-btn');
+        btn.innerHTML = '<i class="ri-check-line"></i> 已复制';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="ri-file-copy-line"></i> 复制报告';
+        }, 2000);
+      });
+    }
+    
+    async function exportLogs() {
+      if (!tauriApi) return;
+      
+      const data = window.crashData;
+      if (!data) return;
+      
+      const { versionId } = data;
+      
+      try {
+        // 使用 Tauri 的文件保存对话框
+        const filePath = await tauriApi.dialog.save({
+          defaultPath: `crash-report-${versionId}-${Date.now()}.zip`,
+          filters: [{
+            name: 'ZIP Archive',
+            extensions: ['zip']
+          }]
+        });
+        
+        console.log('[CrashReport] Save path:', filePath);
+        
+        if (filePath) {
+          // 调用后端导出命令
+          const result = await tauriApi.core.invoke('export_crash_report', {
+            savePath: filePath
+          });
+          
+          if (result.success) {
+            const btn = document.getElementById('export-btn');
+            btn.innerHTML = '<i class="ri-check-line"></i> 已导出';
+            setTimeout(() => {
+              btn.innerHTML = '<i class="ri-download-line"></i> 导出日志';
+            }, 2000);
+          } else {
+            alert('导出失败');
+          }
+        }
+      } catch (e) {
+        console.error('Export failed:', e);
+        alert('导出失败: ' + e);
+      }
+    }
+    
+    // 初始化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

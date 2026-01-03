@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>更新日志</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../tauri-bridge.js"></script>
+</head>
+<body>
+  <div class="changelog-page">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <button class="btn-back" id="back-btn"><i class="ri-arrow-left-s-line"></i><span>返回</span></button>
+      <h1>更新日志</h1>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content-container">
+      <!-- 左侧：版本列表 -->
+      <div class="version-sidebar">
+        <div class="section-header">
+          <h2><i class="ri-history-line"></i> 版本历史</h2>
+          <span class="version-count" id="version-count">0 个版本</span>
+        </div>
+        <div class="version-list" id="version-list">
+          <div class="loading-state">
+            <i class="ri-loader-4-line spin"></i>
+            <span>加载中...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：详细内容 -->
+      <div class="detail-panel">
+        <div class="detail-container" id="detail-container">
+          <div class="empty-state">
+            <i class="ri-file-list-3-line"></i>
+            <h3>选择版本查看详情</h3>
+            <p>从左侧列表选择一个版本</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,571 @@
+/* ═══════════════════════════════════════════════════════════
+   Skins Page - 皮肤管理
+═══════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --accent: #d7bbec;
+  --accent-soft: rgba(215, 187, 236, 0.15);
+  --green: #22c55e;
+  --orange: #f59e0b;
+  --purple: #a855f7;
+  --red: #ef4444;
+  --cyan: #06b6d4;
+  
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.12);
+  
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
+  
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--glass-border-hover); }
+
+.skins-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   页面头部
+═══════════════════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-back:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.btn-back i {
+  font-size: 16px;
+}
+
+.page-header h1 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   内容布局
+═══════════════════════════════════════════════════════════ */
+.skins-content {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3D 预览区
+═══════════════════════════════════════════════════════════ */
+.skin-preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+.preview-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 400px;
+  flex-shrink: 0;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.preview-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.preview-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.ctrl-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ctrl-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.ctrl-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.preview-canvas-wrapper {
+  flex: 1;
+  position: relative;
+  min-height: 300px;
+}
+
+.preview-canvas-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.preview-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+}
+
+.preview-placeholder i {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.preview-placeholder span {
+  font-size: 12px;
+}
+
+.preview-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--glass-border);
+  font-size: 11px;
+}
+
+.skin-name {
+  font-weight: 500;
+}
+
+.skin-model {
+  color: var(--text-tertiary);
+}
+
+/* 皮肤操作按钮 */
+.skin-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.action-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+  border-color: var(--glass-border-hover);
+}
+
+.action-btn i {
+  font-size: 14px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   皮肤结构区
+═══════════════════════════════════════════════════════════ */
+.skin-structure-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+.structure-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.structure-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.structure-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.structure-hint {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+/* 皮肤地图 */
+.skin-map-container {
+  position: relative;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+#skin-map-canvas {
+  width: 256px;
+  height: 256px;
+  image-rendering: pixelated;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: repeating-conic-gradient(#1a1a1e 0% 25%, #222226 0% 50%) 50% / 16px 16px;
+}
+
+.skin-map-overlay {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 256px;
+  height: 256px;
+  pointer-events: none;
+}
+
+.part-label {
+  position: absolute;
+  transform: scale(4);
+  transform-origin: top left;
+  cursor: pointer;
+  pointer-events: auto;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+
+.part-label:hover {
+  border-color: var(--accent);
+  background: rgba(215, 187, 236, 0.2);
+}
+
+.part-label .label-text,
+.part-label .label-coords {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 4px;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  transform: scale(0.25);
+  transform-origin: left top;
+}
+
+.part-label .label-coords {
+  top: 12px;
+  color: var(--text-tertiary);
+}
+
+.part-label:hover .label-text,
+.part-label:hover .label-coords {
+  display: block;
+}
+
+/* 部位列表 */
+.part-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.part-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.part-item:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+}
+
+.part-preview {
+  width: 32px;
+  height: 32px;
+  background: repeating-conic-gradient(#1a1a1e 0% 25%, #222226 0% 50%) 50% / 8px 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.part-preview canvas {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.part-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.part-name {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.part-size {
+  font-size: 9px;
+  color: var(--text-tertiary);
+}
+
+.part-export {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+  opacity: 0;
+}
+
+.part-item:hover .part-export {
+  opacity: 1;
+}
+
+.part-export:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   账户信息卡片
+═══════════════════════════════════════════════════════════ */
+.account-info-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.account-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.account-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-details {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.detail-value {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'Consolas', monospace;
+}
+
+/* 披风区域 */
+.cape-section {
+  padding: 12px 14px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.cape-section h3 {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.cape-preview {
+  width: 64px;
+  height: 32px;
+  background: repeating-conic-gradient(#1a1a1e 0% 25%, #222226 0% 50%) 50% / 8px 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cape-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   响应式
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 800px) {
+  .skins-content {
+    flex-direction: column;
+  }
+  
+  .skin-preview-section {
+    min-height: 350px;
+  }
+  
+  .skin-structure-section {
+    min-height: auto;
+  }
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(20, 20, 24, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: toastIn 0.25s ease;
+  z-index: 1000;
+}
+
+.toast.success i { color: var(--green); }
+.toast.error i { color: var(--red); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

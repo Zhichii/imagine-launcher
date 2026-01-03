@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>登录失败 - ImagineLauncher</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg: #ffffff;
+      --text-primary: #1a1a1a;
+      --text-secondary: #5a5a6d;
+      --error: #ef4444;
+      --error-light: #f87171;
+      --card-bg: #ffffff;
+      --card-border: #e5e7eb;
+      --card-shadow: rgba(0, 0, 0, 0.1);
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 44px 36px;
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 8px 32px var(--card-shadow);
+    }
+    
+    .icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 2px solid var(--error);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .icon:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+    
+    .icon svg {
+      width: 26px;
+      height: 26px;
+      fill: none;
+      stroke: var(--error);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    h1 {
+      color: #1a1a1a;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    
+    p {
+      color: #5a5a6d;
+      font-size: 15px;
+      margin-bottom: 18px;
+      font-weight: 400;
+    }
+    
+    .hint {
+      color: #6b7280;
+      font-size: 13px;
+      padding-top: 18px;
+      border-top: 1px solid #e5e7eb;
+      font-weight: 450;
+    }
+    .auto-login-info {
+      color: #696c74;
+      font-size: 12px;
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #f9fafb;
+      border-radius: 1px;
+      border-left: 2px solid #ff7676;
+      line-height: 1.4;
+      font-weight: 700;
+      text-align: left;
+    }
+    .footer {
+      color: #9ca3af;
+      font-size: 11px;
+      margin-top: 16px;
+      text-align: center;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+    
+    /* Simple animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes iconPop {
+      0% {
+        transform: scale(0.6);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes crossDraw {
+      0% {
+        stroke-dasharray: 0 100;
+        stroke-dashoffset: 0;
+      }
+      100% {
+        stroke-dasharray: 100 0;
+        stroke-dashoffset: 0;
+      }
+    }
+    
+    .card {
+      animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .icon {
+      animation: iconPop 0.5s ease-out 0.1s both;
+    }
+    
+    .icon svg {
+      animation: crossDraw 0.6s ease-out 0.3s both;
+    }
+    
+    h1 {
+      animation: fadeInUp 0.5s ease-out 0.2s both;
+    }
+    
+    p {
+      animation: fadeInUp 0.5s ease-out 0.3s both;
+    }
+    
+    .hint {
+      animation: fadeInUp 0.5s ease-out 0.4s both;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </div>
+      <h1>登录失败</h1>
+      <p>请返回启动器后重新尝试</p>
+      <div class="hint">你的登录失败了，可以关闭此页面返回重试</div>
+    <div class="auto-login-info"><strong>Tips</strong> <br> 1.请确保您的网络畅通,极端可尝试使用网络代理<br> 2.确保您的账户拥有Minecraft<br>3.确保您的账户未被封禁</div>
+    </div>
+    <div class="footer">© 2025 ImagineLauncher. All rights reserved. <br> Powered By ZZBuAoYe </div>
+  </div>
+</body>
+</html>

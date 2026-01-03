@@ -1,0 +1,810 @@
+/* ═══════════════════════════════════════════════════════════
+   首页 - 极简美学 / Minimalist Aesthetic
+   字体: DM Sans (几何简约) + JetBrains Mono (等宽细节)
+   理念: 呼吸感、留白、精准对齐
+═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --accent: #d7bbec;
+  --accent-dark: #b89dd4;
+  --green: #22c55e;
+  --red: #ef4444;
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.45);
+  --text-tertiary: rgba(255, 255, 255, 0.25);
+  --bg-base: #09090b;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+.home-page {
+  height: 100%;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   主容器 - 全屏布局
+═══════════════════════════════════════════════════════════ */
+.home-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  padding: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   左上角区域 - 账户 + 版本选择器
+═══════════════════════════════════════════════════════════ */
+.top-left-section {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 280px;
+  z-index: 10;
+}
+
+.account-bar {
+  display: none;
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.account-info::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(215, 187, 236, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.account-info:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.account-info:hover::before {
+  opacity: 1;
+}
+
+.account-info:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s;
+}
+
+/* 点击波纹效果 */
+.account-info::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: radial-gradient(circle, rgba(215, 187, 236, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+  opacity: 0;
+}
+
+.account-info.ripple::after {
+  transform: translate(-50%, -50%) scale(2);
+  opacity: 1;
+  transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+}
+
+.account-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--glass-bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.account-avatar i {
+  font-size: 18px;
+  color: var(--text-tertiary);
+}
+
+.account-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}
+
+.account-type {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}
+
+.top-actions {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   版本选择器 - 在账户下方
+═══════════════════════════════════════════════════════════ */
+.launch-title {
+  display: none;
+}
+
+.version-selector {
+  position: relative;
+  width: 100%;
+  min-width: 280px;
+}
+
+.version-display {
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.version-display:hover {
+  background: rgba(0, 0, 0, 0.6);
+  border-color: var(--accent);
+}
+
+.version-display.active {
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.version-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.version-label {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+}
+
+.version-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.version-arrow {
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.version-display.active .version-arrow {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+.version-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.version-dropdown.active {
+  display: flex;
+  animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.version-search {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+}
+
+.version-search:focus-within {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px rgba(215, 187, 236, 0.1);
+}
+
+.version-search i {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.version-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}
+
+.version-search input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.version-item {
+  padding: 9px 11px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.version-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+
+.version-item.selected {
+  background: rgba(215, 187, 236, 0.12);
+  border-color: var(--accent);
+}
+
+.version-item.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+.version-item-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.version-item.selected .version-item-name {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.version-item-type {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'DM Sans', sans-serif;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.version-item:hover .version-item-type {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.version-item.selected .version-item-type {
+  background: rgba(215, 187, 236, 0.2);
+  color: var(--accent);
+}
+
+.version-loading {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+}
+
+.version-loading i {
+  font-size: 18px;
+  animation: spin 1s linear infinite;
+}
+
+.launch-button {
+  width: 100%;
+  padding: 16px 32px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+}
+
+.launch-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.launch-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.launch-button:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.launch-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s;
+}
+
+.launch-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.launch-button i {
+  font-size: 18px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   启动按钮 - 右下角
+═══════════════════════════════════════════════════════════ */
+.launch-section {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+.launch-button {
+  padding: 14px 28px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+  min-width: 140px;
+}
+
+.launch-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.launch-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.launch-button:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.launch-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s;
+}
+
+.launch-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.launch-button i {
+  font-size: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   启动进度弹窗
+═══════════════════════════════════════════════════════════ */
+.launch-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.launch-modal.show {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.launch-modal-content {
+  width: 340px;
+  background: rgba(20, 20, 24, 0.98);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.launch-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.launch-modal-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}
+
+.launch-steps {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.launch-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.launch-step.active {
+  background: rgba(215, 187, 236, 0.12);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.launch-step.done {
+  color: var(--green);
+}
+
+.launch-step.error {
+  color: var(--red);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--red);
+}
+
+.step-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 16px;
+}
+
+.launch-step.active .step-icon i {
+  animation: spin 1s linear infinite;
+  color: var(--accent);
+}
+
+.launch-step.done .step-icon {
+  display: none;
+}
+
+.launch-step.error .step-icon {
+  display: none;
+}
+
+.step-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}
+
+.step-detail {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}
+
+.step-check {
+  width: 20px;
+  height: 20px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.launch-step.done .step-check {
+  display: flex;
+  color: var(--green);
+}
+
+.launch-step.error .step-check i::before {
+  content: "\eb98"; /* ri-close-line */
+}
+
+.launch-step.error .step-check {
+  display: flex;
+  color: var(--red);
+}
+
+.launch-step.done .step-detail {
+  color: var(--green);
+  opacity: 0.8;
+}
+
+.launch-step.error .step-detail {
+  color: var(--red);
+}
+
+.launch-status {
+  padding: 12px 20px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.game-status {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  padding: 12px 18px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+  z-index: 10;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+.status-text {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}
+
+.btn-stop {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid var(--red);
+  border-radius: 5px;
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-stop:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   快捷导航 - 隐藏（HMCL 风格不需要）
+═══════════════════════════════════════════════════════════ */
+.quick-nav {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   底部信息 - 隐藏（HMCL 风格不需要）
+═══════════════════════════════════════════════════════════ */
+.footer-info {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   空状态
+═══════════════════════════════════════════════════════════ */
+.empty-state {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.empty-state i {
+  font-size: 40px;
+  opacity: 0.2;
+  margin-bottom: 12px;
+}
+
+.empty-state-text {
+  font-size: 12px;
+  font-family: 'DM Sans', -apple-system, 'Microsoft YaHei', sans-serif;
+}

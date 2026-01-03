@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模组下载</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../tauri-bridge.js"></script>
+</head>
+<body>
+  <div class="mods-page">
+    <div class="page-header">
+      <button class="btn-back" id="back-btn"><i class="ri-arrow-left-s-line"></i><span>返回</span></button>
+      <h1>模组下载</h1>
+    </div>
+
+    <!-- 游戏选择区域 -->
+    <div class="game-selector-section">
+      <span class="game-selector-label"><i class="ri-gamepad-line"></i>选择游戏实例</span>
+      <div class="game-selector-select">
+        <select id="game-instance-select">
+          <option value="">不指定（手动选择版本）</option>
+        </select>
+      </div>
+      <div class="game-selector-info" id="game-selector-info" style="display: none;">
+        <span class="game-info-badge version" id="game-mc-version"><i class="ri-price-tag-3-line"></i>-</span>
+        <span class="game-info-badge loader" id="game-loader"><i class="ri-puzzle-line"></i>-</span>
+      </div>
+    </div>
+
+    <!-- 搜索和筛选区域 -->
+    <div class="mods-toolbar">
+      <div class="search-box">
+        <i class="ri-search-line"></i>
+        <input type="text" id="mods-search" placeholder="搜索模组...">
+      </div>
+      <button class="btn-search" id="btn-search"><i class="ri-search-line"></i> 搜索</button>
+      <div class="mods-filters">
+        <select id="mods-game-version">
+          <option value="">所有版本</option>
+        </select>
+        <select id="mods-loader">
+          <option value="">所有加载器</option>
+          <option value="fabric">Fabric</option>
+          <option value="forge">Forge</option>
+          <option value="quilt">Quilt</option>
+          <option value="neoforge">NeoForge</option>
+        </select>
+        <select id="mods-sort">
+          <option value="relevance">相关性</option>
+          <option value="downloads">下载量</option>
+          <option value="updated">最近更新</option>
+          <option value="newest">最新发布</option>
+        </select>
+      </div>
+      <button class="btn-icon" id="refresh-mods" title="刷新"><i class="ri-refresh-line"></i></button>
+    </div>
+
+    <!-- 推荐模组区域 -->
+    <div class="recommended-section" id="recommended-section">
+      <div class="section-header">
+        <h2><i class="ri-star-line"></i> 热门推荐</h2>
+        <span class="section-hint">精选优质模组</span>
+      </div>
+      <div class="recommended-grid" id="recommended-grid">
+        <div class="loading-state"><i class="ri-loader-4-line spin"></i><span>加载推荐模组...</span></div>
+      </div>
+    </div>
+
+    <!-- 搜索结果区域 -->
+    <div class="search-results-section" id="search-results-section" style="display: none;">
+      <div class="section-header">
+        <h2><i class="ri-search-line"></i> 搜索结果</h2>
+        <span class="results-count" id="results-count"></span>
+      </div>
+      <div class="mods-grid" id="mods-grid"></div>
+      <div class="mods-pagination" id="mods-pagination" style="display: none;">
+        <button class="btn-page" id="mods-prev" disabled><i class="ri-arrow-left-s-line"></i></button>
+        <span class="page-info" id="mods-page-info">1 / 1</span>
+        <button class="btn-page" id="mods-next" disabled><i class="ri-arrow-right-s-line"></i></button>
+      </div>
+    </div>
+
+    <!-- 模组详情弹窗 -->
+    <div class="mod-detail-modal" id="mod-detail-modal">
+      <div class="mod-detail-content">
+        <div class="mod-detail-header">
+          <div class="mod-detail-icon">
+            <img id="mod-detail-icon-img" src="" alt="">
+          </div>
+          <div class="mod-detail-title-section">
+            <h3 id="mod-detail-title">模组名称</h3>
+            <p id="mod-detail-author">作者</p>
+          </div>
+          <button class="mod-detail-close" id="mod-detail-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="mod-detail-body">
+          <p class="mod-detail-desc" id="mod-detail-desc">模组描述</p>
+          <div class="mod-detail-meta">
+            <span class="meta-item"><i class="ri-download-line"></i><span id="mod-detail-downloads">0</span></span>
+            <span class="meta-item"><i class="ri-time-line"></i><span id="mod-detail-updated">-</span></span>
+          </div>
+          <div class="mod-detail-categories" id="mod-detail-categories"></div>
+          
+          <!-- 前置模组区域 -->
+          <div class="mod-dependencies-section" id="mod-dependencies-section" style="display: none;">
+            <h4><i class="ri-link"></i> 前置模组</h4>
+            <div class="dependencies-list" id="dependencies-list"></div>
+          </div>
+          
+          <div class="mod-versions-section">
+            <h4>选择版本</h4>
+            <!-- 推荐版本提示 -->
+            <div class="recommended-version-hint" id="recommended-version-hint" style="display: none;">
+              <i class="ri-lightbulb-line"></i>
+              <span id="recommended-hint-text">已根据您选择的游戏自动筛选兼容版本</span>
+            </div>
+            <div class="mod-versions-filters">
+              <select id="mod-version-game">
+                <option value="">所有游戏版本</option>
+              </select>
+              <select id="mod-version-loader">
+                <option value="">所有加载器</option>
+              </select>
+            </div>
+            <div class="mod-versions-list" id="mod-versions-list">
+              <div class="loading-state"><i class="ri-loader-4-line spin"></i><span>加载版本...</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="mod-detail-footer">
+          <a class="btn-secondary" id="mod-detail-page" href="#" target="_blank">
+            <i class="ri-external-link-line"></i><span>查看页面</span>
+          </a>
+          <button class="btn-primary" id="mod-detail-download" disabled>
+            <i class="ri-download-line"></i><span>下载选中版本</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下载目标选择弹窗 -->
+    <div class="download-target-modal" id="download-target-modal">
+      <div class="download-target-content">
+        <div class="download-target-header">
+          <h3>选择下载位置</h3>
+          <button class="download-target-close" id="download-target-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="download-target-body">
+          <p>选择要将模组安装到哪个游戏版本：</p>
+          <select id="download-target-version">
+            <option value="">选择游戏版本</option>
+          </select>
+          <div class="download-target-info" id="download-target-info" style="display: none;">
+            <span id="download-target-filename"></span>
+          </div>
+        </div>
+        <div class="download-target-footer">
+          <button class="btn-secondary" id="download-target-cancel">取消</button>
+          <button class="btn-primary" id="download-target-confirm" disabled>
+            <i class="ri-download-line"></i><span>下载</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

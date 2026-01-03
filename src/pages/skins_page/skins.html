@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>皮肤管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/skinview3d@3.0.1/bundles/skinview3d.bundle.min.js"></script>
+  <script src="../../tauri-bridge.js"></script>
+</head>
+<body>
+  <div class="skins-page">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <button class="btn-back" id="back-btn">
+        <i class="ri-arrow-left-s-line"></i>
+        <span>返回</span>
+      </button>
+      <h1>皮肤管理</h1>
+    </div>
+
+    <div class="skins-content">
+      <!-- 左侧：3D 预览 -->
+      <div class="skin-preview-section">
+        <div class="preview-card">
+          <div class="preview-header">
+            <h2>3D 预览</h2>
+            <div class="preview-controls">
+              <button class="ctrl-btn" id="rotate-btn" title="自动旋转">
+                <i class="ri-refresh-line"></i>
+              </button>
+              <button class="ctrl-btn" id="walk-btn" title="行走动画">
+                <i class="ri-walk-line"></i>
+              </button>
+              <button class="ctrl-btn" id="run-btn" title="奔跑动画">
+                <i class="ri-run-line"></i>
+              </button>
+            </div>
+          </div>
+          <div class="preview-canvas-wrapper">
+            <canvas id="skin-canvas"></canvas>
+            <div class="preview-placeholder" id="preview-placeholder">
+              <i class="ri-user-line"></i>
+              <span>请先登录账户</span>
+            </div>
+          </div>
+          <div class="preview-info" id="preview-info">
+            <span class="skin-name" id="skin-name">-</span>
+            <span class="skin-model" id="skin-model">-</span>
+          </div>
+        </div>
+
+        <!-- 皮肤操作 -->
+        <div class="skin-actions">
+          <button class="action-btn" id="change-skin-btn">
+            <i class="ri-upload-2-line"></i>
+            <span>更换皮肤</span>
+          </button>
+          <button class="action-btn" id="reset-skin-btn">
+            <i class="ri-refresh-line"></i>
+            <span>重置默认</span>
+          </button>
+          <button class="action-btn" id="export-skin-btn">
+            <i class="ri-download-line"></i>
+            <span>导出皮肤</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 右侧：皮肤结构图 -->
+      <div class="skin-structure-section">
+        <div class="structure-card">
+          <div class="structure-header">
+            <h2>皮肤结构</h2>
+            <span class="structure-hint">点击部位可单独导出</span>
+          </div>
+          
+          <div class="skin-map-container">
+            <canvas id="skin-map-canvas" width="64" height="64"></canvas>
+            <div class="skin-map-overlay" id="skin-map-overlay">
+              <!-- 头部 -->
+              <div class="part-label" data-part="head" style="left: 8px; top: 8px; width: 8px; height: 8px;">
+                <span class="label-text">头部</span>
+                <span class="label-coords">(8,8) 8×8</span>
+              </div>
+              <!-- 头部外层 -->
+              <div class="part-label" data-part="head-overlay" style="left: 40px; top: 8px; width: 8px; height: 8px;">
+                <span class="label-text">头部外层</span>
+                <span class="label-coords">(40,8) 8×8</span>
+              </div>
+              <!-- 身体 -->
+              <div class="part-label" data-part="body" style="left: 20px; top: 20px; width: 8px; height: 12px;">
+                <span class="label-text">身体</span>
+                <span class="label-coords">(20,20) 8×12</span>
+              </div>
+              <!-- 右臂 -->
+              <div class="part-label" data-part="right-arm" style="left: 44px; top: 20px; width: 4px; height: 12px;">
+                <span class="label-text">右臂</span>
+                <span class="label-coords">(44,20) 4×12</span>
+              </div>
+              <!-- 左臂 -->
+              <div class="part-label" data-part="left-arm" style="left: 36px; top: 52px; width: 4px; height: 12px;">
+                <span class="label-text">左臂</span>
+                <span class="label-coords">(36,52) 4×12</span>
+              </div>
+              <!-- 右腿 -->
+              <div class="part-label" data-part="right-leg" style="left: 4px; top: 20px; width: 4px; height: 12px;">
+                <span class="label-text">右腿</span>
+                <span class="label-coords">(4,20) 4×12</span>
+              </div>
+              <!-- 左腿 -->
+              <div class="part-label" data-part="left-leg" style="left: 20px; top: 52px; width: 4px; height: 12px;">
+                <span class="label-text">左腿</span>
+                <span class="label-coords">(20,52) 4×12</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="part-list">
+            <div class="part-item" data-part="head">
+              <div class="part-preview" id="part-head"></div>
+              <div class="part-info">
+                <span class="part-name">头部</span>
+                <span class="part-size">8×8×8</span>
+              </div>
+              <button class="part-export" title="导出"><i class="ri-download-line"></i></button>
+            </div>
+            <div class="part-item" data-part="body">
+              <div class="part-preview" id="part-body"></div>
+              <div class="part-info">
+                <span class="part-name">身体</span>
+                <span class="part-size">8×12×4</span>
+              </div>
+              <button class="part-export" title="导出"><i class="ri-download-line"></i></button>
+            </div>
+            <div class="part-item" data-part="right-arm">
+              <div class="part-preview" id="part-right-arm"></div>
+              <div class="part-info">
+                <span class="part-name">右臂</span>
+                <span class="part-size">4×12×4</span>
+              </div>
+              <button class="part-export" title="导出"><i class="ri-download-line"></i></button>
+            </div>
+            <div class="part-item" data-part="left-arm">
+              <div class="part-preview" id="part-left-arm"></div>
+              <div class="part-info">
+                <span class="part-name">左臂</span>
+                <span class="part-size">4×12×4</span>
+              </div>
+              <button class="part-export" title="导出"><i class="ri-download-line"></i></button>
+            </div>
+            <div class="part-item" data-part="right-leg">
+              <div class="part-preview" id="part-right-leg"></div>
+              <div class="part-info">
+                <span class="part-name">右腿</span>
+                <span class="part-size">4×12×4</span>
+              </div>
+              <button class="part-export" title="导出"><i class="ri-download-line"></i></button>
+            </div>
+            <div class="part-item" data-part="left-leg">
+              <div class="part-preview" id="part-left-leg"></div>
+              <div class="part-info">
+                <span class="part-name">左腿</span>
+                <span class="part-size">4×12×4</span>
+              </div>
+              <button class="part-export" title="导出"><i class="ri-download-line"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 账户信息 -->
+        <div class="account-info-card" id="account-info-card">
+          <div class="account-header">
+            <h2>账户信息</h2>
+          </div>
+          <div class="account-details" id="account-details">
+            <div class="detail-row">
+              <span class="detail-label">用户名</span>
+              <span class="detail-value" id="detail-username">-</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">UUID</span>
+              <span class="detail-value" id="detail-uuid">-</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">账户类型</span>
+              <span class="detail-value" id="detail-type">-</span>
+            </div>
+          </div>
+          
+          <!-- 披风展示 -->
+          <div class="cape-section" id="cape-section" style="display: none;">
+            <h3>披风</h3>
+            <div class="cape-preview" id="cape-preview">
+              <img id="cape-image" alt="Cape">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>实例管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../tauri-bridge.js"></script>
+</head>
+<body>
+  <div class="instances-page">
+    <!-- 启动进度弹窗 -->
+    <div class="launch-modal" id="launch-modal">
+      <div class="launch-modal-content">
+        <div class="launch-modal-header">
+          <h3 data-i18n="instances.launch.title">启动游戏</h3>
+          <button class="launch-modal-close" id="launch-modal-close">
+            <i class="ri-close-line"></i>
+          </button>
+        </div>
+        <div class="launch-steps" id="launch-steps">
+          <div class="launch-step" data-step="complete-files">
+            <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+            <div class="step-content">
+              <span class="step-name" data-i18n="instances.launch.completeFiles">补全游戏文件</span>
+              <span class="step-detail"></span>
+            </div>
+            <div class="step-check"><i class="ri-check-line"></i></div>
+          </div>
+          <div class="launch-step" data-step="check-account">
+            <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+            <div class="step-content">
+              <span class="step-name" data-i18n="instances.launch.checkAccount">验证账户</span>
+              <span class="step-detail"></span>
+            </div>
+            <div class="step-check"><i class="ri-check-line"></i></div>
+          </div>
+          <div class="launch-step" data-step="check-java">
+            <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+            <div class="step-content">
+              <span class="step-name" data-i18n="instances.launch.checkJava">检测 Java 版本</span>
+              <span class="step-detail"></span>
+            </div>
+            <div class="step-check"><i class="ri-check-line"></i></div>
+          </div>
+          <div class="launch-step" data-step="check-dir">
+            <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+            <div class="step-content">
+              <span class="step-name" data-i18n="instances.launch.checkDir">检查游戏目录</span>
+              <span class="step-detail"></span>
+            </div>
+            <div class="step-check"><i class="ri-check-line"></i></div>
+          </div>
+          <div class="launch-step" data-step="build-classpath">
+            <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+            <div class="step-content">
+              <span class="step-name" data-i18n="instances.launch.buildClasspath">处理游戏依赖</span>
+              <span class="step-detail"></span>
+            </div>
+            <div class="step-check"><i class="ri-check-line"></i></div>
+          </div>
+          <div class="launch-step" data-step="extract-natives">
+            <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+            <div class="step-content">
+              <span class="step-name" data-i18n="instances.launch.extractNatives">提取本地库</span>
+              <span class="step-detail"></span>
+            </div>
+            <div class="step-check"><i class="ri-check-line"></i></div>
+          </div>
+          <div class="launch-step" data-step="build-args">
+            <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+            <div class="step-content">
+              <span class="step-name" data-i18n="instances.launch.buildArgs">构建启动参数</span>
+              <span class="step-detail"></span>
+            </div>
+            <div class="step-check"><i class="ri-check-line"></i></div>
+          </div>
+          <div class="launch-step" data-step="launch">
+            <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+            <div class="step-content">
+              <span class="step-name" data-i18n="instances.launch.launch">启动游戏</span>
+              <span class="step-detail"></span>
+            </div>
+            <div class="step-check"><i class="ri-check-line"></i></div>
+          </div>
+        </div>
+        <div class="launch-status" id="launch-status" data-i18n="instances.launch.pleaseWait">请耐心等待</div>
+        <div class="launch-actions">
+          <button class="btn-cancel" id="launch-cancel" data-i18n="instances.launch.cancel">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主列表视图 -->
+    <div class="list-view" id="list-view">
+      <!-- 工具栏 -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn-icon" id="refresh-btn" data-i18n-title="instances.toolbar.refresh" title="刷新"><i class="ri-refresh-line"></i></button>
+          <div class="search-box">
+            <i class="ri-search-line"></i>
+            <input type="text" data-i18n-placeholder="instances.toolbar.searchPlaceholder" placeholder="搜索版本..." id="search-input">
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <div class="filter-group">
+            <button class="filter-btn active" data-filter="all" data-i18n="instances.toolbar.all">全部</button>
+            <button class="filter-btn" data-filter="release" data-i18n="instances.toolbar.release">正式版</button>
+            <button class="filter-btn" data-filter="snapshot" data-i18n="instances.toolbar.snapshot">快照</button>
+            <button class="filter-btn" data-filter="modded" data-i18n="instances.toolbar.modded">模组</button>
+          </div>
+          <div class="layout-group">
+            <button class="layout-btn active" data-layout="auto" data-i18n-title="instances.layout.auto" title="自动布局"><i class="ri-layout-grid-line"></i></button>
+            <button class="layout-btn" data-layout="grid" data-i18n-title="instances.layout.grid" title="网格布局"><i class="ri-grid-fill"></i></button>
+            <button class="layout-btn" data-layout="list" data-i18n-title="instances.layout.list" title="列表布局"><i class="ri-list-check"></i></button>
+          </div>
+          <button class="btn-icon running-btn" id="running-instances-btn" data-i18n-title="instances.runningInstances" title="运行中的实例">
+            <i class="ri-play-circle-line"></i>
+            <span class="running-badge" style="display: none;">0</span>
+          </button>
+          <button class="btn-primary" id="add-folder-btn">
+            <i class="ri-add-line"></i>
+            <span data-i18n="instances.toolbar.addDir">添加目录</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 目录选择器 -->
+      <div class="dir-tabs" id="dir-tabs">
+        <div class="dir-tab empty" id="empty-tab">
+          <i class="ri-folder-add-line"></i>
+          <span data-i18n="instances.emptyTab">点击添加目录</span>
+        </div>
+      </div>
+
+      <!-- 版本列表 -->
+      <div class="versions-container">
+        <div class="versions-grid" id="versions-grid">
+          <div class="empty-state">
+            <i class="ri-folder-add-line"></i>
+            <h3 data-i18n="instances.emptyState.title">添加 .minecraft 目录</h3>
+            <p data-i18n="instances.emptyState.desc">点击上方"添加目录"按钮选择游戏目录</p>
+            <button class="btn-outline" id="empty-add-btn">
+              <i class="ri-folder-open-line"></i>
+              <span data-i18n="instances.emptyState.selectDir">选择目录</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 版本设置页面（覆盖层） -->
+    <div class="settings-overlay" id="settings-overlay">
+      <div class="settings-page-inner">
+        <!-- 顶部栏 -->
+        <div class="settings-header">
+          <button class="btn-back" id="back-to-list">
+            <i class="ri-arrow-left-s-line"></i>
+            <span data-i18n="instances.settings.back">返回</span>
+          </button>
+          <div class="settings-title-area">
+            <div class="version-icon-wrapper" id="version-icon-wrapper">
+              <div class="version-icon vanilla" id="settings-version-icon">
+                <i class="ri-leaf-line"></i>
+              </div>
+              <button class="icon-edit-btn" id="edit-icon-btn" title="更换图标">
+                <i class="ri-pencil-line"></i>
+              </button>
+            </div>
+            <div class="version-title-info">
+              <input type="text" class="version-name-input" id="version-name-input" placeholder="版本名称">
+              <span class="version-id-display" id="version-id-display"></span>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="btn-text" id="reset-settings">
+              <i class="ri-refresh-line"></i>
+              <span data-i18n="instances.settings.resetDefault">恢复默认</span>
+            </button>
+            <button class="btn-primary" id="save-settings">
+              <i class="ri-save-line"></i>
+              <span data-i18n="instances.settings.save">保存</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab 导航 -->
+        <div class="settings-tabs">
+          <button class="settings-tab active" data-tab="general">
+            <i class="ri-settings-3-line"></i>
+            <span data-i18n="instances.settings.tabs.general">常规</span>
+          </button>
+          <button class="settings-tab" data-tab="mods">
+            <i class="ri-puzzle-line"></i>
+            <span data-i18n="instances.settings.tabs.mods">模组</span>
+          </button>
+          <button class="settings-tab" data-tab="worlds">
+            <i class="ri-earth-line"></i>
+            <span data-i18n="instances.settings.tabs.worlds">存档</span>
+          </button>
+          <button class="settings-tab" data-tab="resourcepacks">
+            <i class="ri-palette-line"></i>
+            <span data-i18n="instances.settings.tabs.resourcepacks">资源包</span>
+          </button>
+          <button class="settings-tab" data-tab="advanced">
+            <i class="ri-code-line"></i>
+            <span data-i18n="instances.settings.tabs.advanced">高级</span>
+          </button>
+        </div>
+
+        <!-- Tab 内容区 -->
+        <div class="settings-tab-content">
+          <!-- 常规设置 Tab -->
+          <div class="tab-panel active" id="tab-general">
+            <div class="settings-content">
+              <!-- Java 设置 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-terminal-box-line"></i>
+                  <span data-i18n="instances.settings.java.title">Java 设置</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      <span data-i18n="instances.settings.java.path">Java 路径</span>
+                      <span class="setting-hint" data-i18n="instances.settings.java.pathHint">留空使用全局设置</span>
+                    </div>
+                    <div class="java-selector">
+                      <div class="select-wrapper">
+                        <select id="java-select">
+                          <option value="" data-i18n="instances.settings.java.useGlobal">使用全局设置</option>
+                        </select>
+                        <i class="ri-arrow-down-s-line select-arrow"></i>
+                      </div>
+                      <button class="btn-icon-sm" id="refresh-java" title="刷新"><i class="ri-refresh-line"></i></button>
+                      <button class="btn-icon-sm" id="browse-java" title="浏览"><i class="ri-folder-open-line"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 内存设置 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-cpu-line"></i>
+                  <span data-i18n="instances.settings.memory.title">内存设置</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="memory-auto">
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-label" data-i18n="instances.settings.memory.auto">自动分配内存</span>
+                    </label>
+                    <div class="system-memory-info" id="system-memory-info">
+                      <span class="memory-used">0</span> / <span class="memory-total">0</span> GB
+                    </div>
+                  </div>
+                  
+                  <div class="memory-slider-section" id="memory-slider-section">
+                    <div class="memory-slider-header">
+                      <span class="memory-label" data-i18n="instances.settings.memory.allocate">分配内存</span>
+                      <div class="memory-display">
+                        <div class="input-with-arrows">
+                          <input type="number" id="memory-max-input" min="512" max="32768" value="2048">
+                          <div class="arrow-btns">
+                            <button type="button" class="arrow-btn" data-action="up">
+                              <svg viewBox="0 0 10 6"><path d="M1 5L5 1L9 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+                            </button>
+                            <button type="button" class="arrow-btn" data-action="down">
+                              <svg viewBox="0 0 10 6"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+                            </button>
+                          </div>
+                        </div>
+                        <span>MB</span>
+                      </div>
+                    </div>
+                    <div class="memory-slider-wrapper">
+                      <input type="range" id="memory-max" min="512" max="32768" step="128" value="2048">
+                      <div class="memory-slider-marks">
+                        <span>512M</span>
+                        <span>4G</span>
+                        <span>8G</span>
+                        <span>16G</span>
+                        <span>32G</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="memory-presets">
+                    <span class="preset-label" data-i18n="instances.settings.memory.quickSelect">快速选择:</span>
+                    <button class="preset-btn" data-max="2048">2G</button>
+                    <button class="preset-btn" data-max="4096">4G</button>
+                    <button class="preset-btn" data-max="8192">8G</button>
+                    <button class="preset-btn" data-max="16384">16G</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 版本隔离 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-folder-shield-line"></i>
+                  <span data-i18n="instances.settings.isolation.title">版本隔离</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="version-isolation">
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-label" data-i18n="instances.settings.isolation.enable">启用版本隔离</span>
+                    </label>
+                  </div>
+                  <div class="setting-hint-block">
+                    <i class="ri-information-line"></i>
+                    <span data-i18n="instances.settings.isolation.hint">启用后，该版本的存档、资源包、模组等将保存在独立目录中。</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 自动补全文件 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-download-cloud-line"></i>
+                  <span data-i18n="instances.settings.autoComplete.title">自动补全文件</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="auto-complete-files" checked>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-label" data-i18n="instances.settings.autoComplete.enable">启动时自动补全缺失文件</span>
+                    </label>
+                  </div>
+                  <div class="setting-hint-block">
+                    <i class="ri-information-line"></i>
+                    <span data-i18n="instances.settings.autoComplete.hint">启用后，启动游戏时会自动检查并下载缺失的游戏文件（库文件、资源文件等）。</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 窗口设置 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-window-line"></i>
+                  <span data-i18n="instances.settings.window.title">窗口设置</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row inline">
+                    <div class="input-group">
+                      <label data-i18n="instances.settings.window.width">宽度</label>
+                      <div class="input-with-unit">
+                        <input type="number" id="window-width" min="640" max="3840" placeholder="854">
+                        <span>px</span>
+                      </div>
+                    </div>
+                    <span class="input-separator">×</span>
+                    <div class="input-group">
+                      <label data-i18n="instances.settings.window.height">高度</label>
+                      <div class="input-with-unit">
+                        <input type="number" id="window-height" min="480" max="2160" placeholder="480">
+                        <span>px</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="window-presets">
+                    <span class="preset-label" data-i18n="instances.settings.window.presets">预设:</span>
+                    <button class="preset-btn" data-w="854" data-h="480">854×480</button>
+                    <button class="preset-btn" data-w="1280" data-h="720">720p</button>
+                    <button class="preset-btn" data-w="1920" data-h="1080">1080p</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 启动器行为 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-window-line"></i>
+                  <span data-i18n="instances.settings.behavior.title">启动器行为</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      <span data-i18n="instances.settings.behavior.afterLaunch">游戏启动后</span>
+                    </div>
+                    <div class="select-wrapper">
+                      <select id="version-launcher-behavior">
+                        <option value="">使用全局设置</option>
+                        <option value="keep-front">保持前台</option>
+                        <option value="auto-hide">自动隐藏</option>
+                        <option value="auto-exit">自动退出</option>
+                      </select>
+                      <i class="ri-arrow-down-s-line select-arrow"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 模组管理 Tab -->
+          <div class="tab-panel" id="tab-mods">
+            <div class="mods-panel">
+              <div class="mods-toolbar">
+                <div class="mods-search">
+                  <i class="ri-search-line"></i>
+                  <input type="text" id="mods-search-input" placeholder="搜索 Mod...">
+                </div>
+                <div class="mods-actions">
+                  <button class="btn-action" id="mods-download-btn">
+                    <i class="ri-download-line"></i>
+                    <span>下载模组</span>
+                  </button>
+                  <button class="btn-icon-sm" id="mods-add-btn" title="添加 Mod">
+                    <i class="ri-add-line"></i>
+                  </button>
+                  <button class="btn-icon-sm" id="mods-folder-btn" title="打开 Mods 文件夹">
+                    <i class="ri-folder-open-line"></i>
+                  </button>
+                  <button class="btn-icon-sm" id="mods-refresh-btn" title="刷新">
+                    <i class="ri-refresh-line"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="mods-list" id="mods-list">
+                <div class="mods-empty">
+                  <i class="ri-puzzle-line"></i>
+                  <span>暂无 Mod</span>
+                  <p class="mods-empty-hint">点击"下载模组"从 CurseForge 或 Modrinth 获取</p>
+                </div>
+              </div>
+              <div class="mods-stats" id="mods-stats">
+                <span class="mods-count"><span id="mods-enabled-count">0</span> 已启用</span>
+                <span class="mods-separator">|</span>
+                <span class="mods-count"><span id="mods-total-count">0</span> 总计</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 存档管理 Tab -->
+          <div class="tab-panel" id="tab-worlds">
+            <div class="worlds-panel">
+              <div class="worlds-toolbar">
+                <div class="worlds-search">
+                  <i class="ri-search-line"></i>
+                  <input type="text" id="worlds-search-input" placeholder="搜索存档...">
+                </div>
+                <div class="worlds-actions">
+                  <button class="btn-icon-sm" id="worlds-folder-btn" title="打开存档文件夹">
+                    <i class="ri-folder-open-line"></i>
+                  </button>
+                  <button class="btn-icon-sm" id="worlds-refresh-btn" title="刷新">
+                    <i class="ri-refresh-line"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="worlds-list" id="worlds-list">
+                <div class="worlds-empty">
+                  <i class="ri-earth-line"></i>
+                  <span>暂无存档</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 资源包管理 Tab -->
+          <div class="tab-panel" id="tab-resourcepacks">
+            <div class="resourcepacks-panel">
+              <div class="resourcepacks-toolbar">
+                <div class="resourcepacks-search">
+                  <i class="ri-search-line"></i>
+                  <input type="text" id="resourcepacks-search-input" placeholder="搜索资源包...">
+                </div>
+                <div class="resourcepacks-actions">
+                  <button class="btn-action" id="resourcepacks-download-btn">
+                    <i class="ri-download-line"></i>
+                    <span>下载资源包</span>
+                  </button>
+                  <button class="btn-icon-sm" id="resourcepacks-add-btn" title="添加资源包">
+                    <i class="ri-add-line"></i>
+                  </button>
+                  <button class="btn-icon-sm" id="resourcepacks-folder-btn" title="打开资源包文件夹">
+                    <i class="ri-folder-open-line"></i>
+                  </button>
+                  <button class="btn-icon-sm" id="resourcepacks-refresh-btn" title="刷新">
+                    <i class="ri-refresh-line"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="resourcepacks-list" id="resourcepacks-list">
+                <div class="resourcepacks-empty">
+                  <i class="ri-palette-line"></i>
+                  <span>暂无资源包</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 高级设置 Tab -->
+          <div class="tab-panel" id="tab-advanced">
+            <div class="settings-content">
+              <!-- 自定义 JVM 参数 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-code-line"></i>
+                  <span>JVM 参数</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row vertical">
+                    <div class="setting-label">
+                      <span>自定义 JVM 参数</span>
+                      <span class="setting-hint">每行一个参数，留空使用默认</span>
+                    </div>
+                    <textarea id="jvm-args" placeholder="-XX:+UseG1GC&#10;-XX:+ParallelRefProcEnabled" rows="4"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 游戏参数 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-terminal-line"></i>
+                  <span>游戏参数</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row vertical">
+                    <div class="setting-label">
+                      <span>自定义游戏参数</span>
+                      <span class="setting-hint">传递给 Minecraft 的额外参数</span>
+                    </div>
+                    <textarea id="game-args" placeholder="--server play.example.com" rows="3"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 服务器设置 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-server-line"></i>
+                  <span>自动加入服务器</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      <span>服务器地址</span>
+                      <span class="setting-hint">启动后自动连接到指定服务器</span>
+                    </div>
+                    <input type="text" id="server-ip" class="text-input" placeholder="play.example.com:25565">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 环境变量 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <i class="ri-settings-5-line"></i>
+                  <span>环境变量</span>
+                </div>
+                <div class="card-body">
+                  <div class="setting-row vertical">
+                    <div class="setting-label">
+                      <span>自定义环境变量</span>
+                      <span class="setting-hint">格式: KEY=VALUE，每行一个</span>
+                    </div>
+                    <textarea id="env-vars" placeholder="JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8" rows="3"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 图标选择弹窗 -->
+    <div class="icon-picker-modal" id="icon-picker-modal">
+      <div class="icon-picker-content">
+        <div class="icon-picker-header">
+          <h3>选择图标</h3>
+          <button class="icon-picker-close" id="icon-picker-close">
+            <i class="ri-close-line"></i>
+          </button>
+        </div>
+        <div class="icon-picker-body">
+          <div class="icon-section">
+            <h4>预设图标</h4>
+            <div class="icon-grid" id="preset-icons">
+              <div class="icon-option selected" data-icon="grass"><img src="../../assets/icons/grass.png" alt="grass"></div>
+              <div class="icon-option" data-icon="chest"><img src="../../assets/icons/chest.png" alt="chest"></div>
+              <div class="icon-option" data-icon="furnace"><img src="../../assets/icons/furnace.png" alt="furnace"></div>
+              <div class="icon-option" data-icon="craft_table"><img src="../../assets/icons/craft_table.png" alt="craft_table"></div>
+              <div class="icon-option" data-icon="command"><img src="../../assets/icons/command.png" alt="command"></div>
+              <div class="icon-option" data-icon="chicken"><img src="../../assets/icons/chicken.png" alt="chicken"></div>
+              <div class="icon-option" data-icon="forge"><img src="../../assets/icons/forge.png" alt="forge"></div>
+              <div class="icon-option" data-icon="fabric"><img src="../../assets/icons/fabric.png" alt="fabric"></div>
+              <div class="icon-option" data-icon="quilt"><img src="../../assets/icons/quilt.png" alt="quilt"></div>
+              <div class="icon-option" data-icon="neoforge"><img src="../../assets/icons/neoforge.png" alt="neoforge"></div>
+              <div class="icon-option" data-icon="optifine"><img src="../../assets/icons/optifine.png" alt="optifine"></div>
+            </div>
+          </div>
+          <div class="icon-section">
+            <h4>自定义图标</h4>
+            <div class="custom-icon-area">
+              <button class="btn-upload-icon" id="upload-icon-btn">
+                <i class="ri-upload-2-line"></i>
+                <span>上传图片</span>
+              </button>
+              <span class="upload-hint">支持 PNG、JPG 格式，建议 64x64 像素</span>
+            </div>
+          </div>
+        </div>
+        <div class="icon-picker-footer">
+          <button class="btn-cancel" id="icon-picker-cancel">取消</button>
+          <button class="btn-primary" id="icon-picker-confirm">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

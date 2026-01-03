@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>设置</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../tauri-bridge.js"></script>
+</head>
+<body>
+  <div class="settings-page">
+    <div class="settings-layout">
+      <!-- 左侧导航 -->
+      <div class="settings-nav">
+        <div class="nav-header">
+          <button class="back-btn" id="back-to-home">
+            <i class="ri-arrow-left-s-line"></i>
+          </button>
+          <span data-i18n="settings.title">设置</span>
+        </div>
+        <div class="nav-list">
+          <button class="nav-item active" data-section="general">
+            <i class="ri-settings-4-line"></i>
+            <span data-i18n="settings.general">常规</span>
+          </button>
+          <button class="nav-item" data-section="game">
+            <i class="ri-gamepad-line"></i>
+            <span data-i18n="settings.game">游戏</span>
+          </button>
+          <button class="nav-item" data-section="window">
+            <i class="ri-window-line"></i>
+            <span data-i18n="settings.window">窗口</span>
+          </button>
+          <button class="nav-item" data-section="appearance">
+            <i class="ri-palette-line"></i>
+            <span data-i18n="settings.appearance">外观</span>
+          </button>
+          <button class="nav-item" data-section="theme">
+            <i class="ri-brush-line"></i>
+            <span data-i18n="settings.theme">主题</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 右侧内容 -->
+      <div class="settings-content">
+        <!-- 常规设置 -->
+        <div class="settings-section active" id="section-general">
+          <div class="section-title">
+            <i class="ri-settings-4-line"></i>
+            <span data-i18n="settings.general">常规设置</span>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.language">语言</span>
+                <span class="setting-desc" data-i18n="settings.languageDesc">选择界面显示语言</span>
+              </div>
+              <div class="select-wrap">
+                <select id="language">
+                  <option value="zh-CN">简体中文</option>
+                  <option value="en-US">English</option>
+                </select>
+                <i class="ri-arrow-down-s-line"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 游戏设置 -->
+        <div class="settings-section" id="section-game">
+          <div class="section-title">
+            <i class="ri-gamepad-line"></i>
+            <span data-i18n="settings.gameSettings">游戏设置</span>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.minecraftDir">.minecraft 目录</span>
+                <span class="setting-desc" id="mc-dir-path" data-i18n="settings.notSet">未设置</span>
+              </div>
+              <button class="btn-outline-sm" id="select-mc-dir">
+                <i class="ri-folder-open-line"></i>
+                <span data-i18n="settings.selectDir">选择目录</span>
+              </button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.javaPath">Java 路径</span>
+                <span class="setting-desc" id="java-path" data-i18n="settings.notSet">未设置</span>
+              </div>
+              <button class="btn-outline-sm" id="select-java">
+                <i class="ri-terminal-box-line"></i>
+                <span data-i18n="settings.selectJava">选择 Java</span>
+              </button>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.minMemory">最小内存</span>
+                <span class="setting-desc" data-i18n="settings.minMemoryDesc">游戏启动时分配的最小内存 (MB)</span>
+              </div>
+              <div class="num-input-wrap">
+                <input type="number" id="game-memory-min" class="num-input" min="256" max="16384" step="128" value="512">
+                <div class="num-btns">
+                  <button type="button" class="num-btn up"><i class="ri-arrow-up-s-line"></i></button>
+                  <button type="button" class="num-btn down"><i class="ri-arrow-down-s-line"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.maxMemory">最大内存</span>
+                <span class="setting-desc" data-i18n="settings.maxMemoryDesc">游戏启动时分配的最大内存 (MB)</span>
+              </div>
+              <div class="num-input-wrap">
+                <input type="number" id="game-memory-max" class="num-input" min="512" max="32768" step="128" value="2048">
+                <div class="num-btns">
+                  <button type="button" class="num-btn up"><i class="ri-arrow-up-s-line"></i></button>
+                  <button type="button" class="num-btn down"><i class="ri-arrow-down-s-line"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.gameWindowWidth">游戏窗口宽度</span>
+                <span class="setting-desc" data-i18n="settings.gameWindowWidthDesc">Minecraft 窗口宽度 (px)</span>
+              </div>
+              <div class="num-input-wrap">
+                <input type="number" id="game-window-width" class="num-input" min="640" max="3840" step="10" value="854">
+                <div class="num-btns">
+                  <button type="button" class="num-btn up"><i class="ri-arrow-up-s-line"></i></button>
+                  <button type="button" class="num-btn down"><i class="ri-arrow-down-s-line"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.gameWindowHeight">游戏窗口高度</span>
+                <span class="setting-desc" data-i18n="settings.gameWindowHeightDesc">Minecraft 窗口高度 (px)</span>
+              </div>
+              <div class="num-input-wrap">
+                <input type="number" id="game-window-height" class="num-input" min="480" max="2160" step="10" value="480">
+                <div class="num-btns">
+                  <button type="button" class="num-btn up"><i class="ri-arrow-up-s-line"></i></button>
+                  <button type="button" class="num-btn down"><i class="ri-arrow-down-s-line"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.launcherBehavior">游戏启动后</span>
+                <span class="setting-desc" data-i18n="settings.launcherBehaviorDesc">游戏启动后启动器的行为</span>
+              </div>
+              <div class="select-wrap">
+                <select id="launcher-behavior">
+                  <option value="keep-front" data-i18n="settings.behaviorKeepFront">保持前台</option>
+                  <option value="auto-hide" data-i18n="settings.behaviorAutoHide">自动隐藏</option>
+                  <option value="hide-when-game-front" data-i18n="settings.behaviorHideWhenGameFront">游戏在前台时隐藏</option>
+                  <option value="auto-exit" data-i18n="settings.behaviorAutoExit">自动退出</option>
+                </select>
+                <i class="ri-arrow-down-s-line"></i>
+              </div>
+            </div>
+            <div class="setting-hint-block" id="launcher-behavior-hint">
+              <i class="ri-information-line"></i>
+              <span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 窗口设置 -->
+        <div class="settings-section" id="section-window">
+          <div class="section-title">
+            <i class="ri-window-line"></i>
+            <span data-i18n="settings.window">窗口设置</span>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.roundedWindow">圆角窗口</span>
+                <span class="setting-desc" data-i18n="settings.roundedWindowDesc">启用窗口圆角效果</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="border-radius">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row" id="radius-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.cornerRadius">圆角大小</span>
+                <span class="setting-desc" data-i18n="settings.cornerRadiusDesc">调整窗口圆角半径</span>
+              </div>
+              <div class="range-wrap">
+                <input type="range" id="radius-size" min="0" max="24" step="1">
+                <span class="range-val" id="radius-value">12</span>
+              </div>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.windowWidth">窗口宽度</span>
+                <span class="setting-desc" data-i18n="settings.windowWidthDesc">默认窗口宽度 (px)</span>
+              </div>
+              <div class="num-input-wrap">
+                <input type="number" id="window-width" class="num-input" min="800" max="2560" step="10">
+                <div class="num-btns">
+                  <button type="button" class="num-btn up"><i class="ri-arrow-up-s-line"></i></button>
+                  <button type="button" class="num-btn down"><i class="ri-arrow-down-s-line"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.windowHeight">窗口高度</span>
+                <span class="setting-desc" data-i18n="settings.windowHeightDesc">默认窗口高度 (px)</span>
+              </div>
+              <div class="num-input-wrap">
+                <input type="number" id="window-height" class="num-input" min="500" max="1440" step="10">
+                <div class="num-btns">
+                  <button type="button" class="num-btn up"><i class="ri-arrow-up-s-line"></i></button>
+                  <button type="button" class="num-btn down"><i class="ri-arrow-down-s-line"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 外观设置 -->
+        <div class="settings-section" id="section-appearance">
+          <div class="section-title">
+            <i class="ri-palette-line"></i>
+            <span data-i18n="settings.appearance">外观设置</span>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.showScrollbar">显示滚动条</span>
+                <span class="setting-desc" data-i18n="settings.showScrollbarDesc">在内容区域显示滚动条</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="scrollbar">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.animations">动画效果</span>
+                <span class="setting-desc" data-i18n="settings.animationsDesc">启用界面过渡动画</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="animations">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 主题设置 -->
+        <div class="settings-section" id="section-theme">
+          <div class="section-title">
+            <i class="ri-brush-line"></i>
+            <span data-i18n="settings.theme">主题配色</span>
+          </div>
+          
+          <!-- 主题网格 -->
+          <div class="theme-grid" id="theme-grid">
+            <!-- 主题卡片由 JS 动态生成 -->
+          </div>
+          
+          <!-- 自定义主题 -->
+          <div class="setting-card" id="custom-theme-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings.customColor">自定义配色</span>
+                <span class="setting-desc" data-i18n="settings.customColorDesc">选择自定义强调色</span>
+              </div>
+              <div class="color-input-wrap">
+                <input type="color" id="accent-color" value="#d7bbec">
+                <span class="color-value" id="accent-color-value">#d7bbec</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 隐藏的 input 用于保存当前主题值 -->
+          <input type="hidden" id="theme-preset" value="pink">
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="settings-actions">
+          <button class="btn-secondary" id="reset-settings">
+            <i class="ri-restart-line"></i>
+            <span data-i18n="settings.reset">恢复默认</span>
+          </button>
+          <div class="auto-save-hint">
+            <i class="ri-checkbox-circle-line"></i>
+            <span data-i18n="settings.autoSaved">设置已自动保存</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

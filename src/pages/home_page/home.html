@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../tauri-bridge.js"></script>
+</head>
+<body>
+  <div class="home-page">
+    <div class="home-container">
+      
+      <!-- 左上角区域 -->
+      <div class="top-left-section">
+        <!-- 账户信息 -->
+        <div class="account-info" id="account-section">
+          <div class="account-avatar" id="account-avatar">
+            <i class="ri-user-line"></i>
+          </div>
+          <div>
+            <div class="account-name" id="account-name" data-i18n="account.noAccount">未登录</div>
+            <div class="account-type" id="account-type" data-i18n="user.offline">离线</div>
+          </div>
+        </div>
+
+        <!-- 版本选择器 -->
+        <div class="version-selector">
+          <div class="version-display" id="version-display">
+            <div class="version-info">
+              <div class="version-label" data-i18n="home.version">版本</div>
+              <div class="version-name" id="selected-version" data-i18n="home.selectVersion">选择版本</div>
+            </div>
+            <i class="ri-arrow-down-s-line version-arrow"></i>
+          </div>
+          
+          <div class="version-dropdown" id="version-dropdown">
+            <div class="version-search">
+              <i class="ri-search-line"></i>
+              <input type="text" id="version-search" placeholder="搜索..." data-i18n-placeholder="home.search">
+            </div>
+            <div class="version-list" id="version-list">
+              <div class="version-loading">
+                <i class="ri-loader-4-line"></i>
+                <span data-i18n="home.loading">加载中</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 启动进度弹窗 -->
+      <div class="launch-modal" id="launch-modal">
+        <div class="launch-modal-content">
+          <div class="launch-modal-header">
+            <h3 data-i18n="instances.launch.title">启动游戏</h3>
+          </div>
+          <div class="launch-steps" id="launch-steps">
+            <div class="launch-step" data-step="complete-files">
+              <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+              <div class="step-content">
+                <span class="step-name" data-i18n="instances.launch.completeFiles">补全游戏文件</span>
+                <span class="step-detail"></span>
+              </div>
+              <div class="step-check"><i class="ri-check-line"></i></div>
+            </div>
+            <div class="launch-step" data-step="check-account">
+              <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+              <div class="step-content">
+                <span class="step-name" data-i18n="instances.launch.checkAccount">验证账户</span>
+                <span class="step-detail"></span>
+              </div>
+              <div class="step-check"><i class="ri-check-line"></i></div>
+            </div>
+            <div class="launch-step" data-step="check-java">
+              <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+              <div class="step-content">
+                <span class="step-name" data-i18n="instances.launch.checkJava">检测 Java 版本</span>
+                <span class="step-detail"></span>
+              </div>
+              <div class="step-check"><i class="ri-check-line"></i></div>
+            </div>
+            <div class="launch-step" data-step="check-dir">
+              <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+              <div class="step-content">
+                <span class="step-name" data-i18n="instances.launch.checkDir">检查游戏目录</span>
+                <span class="step-detail"></span>
+              </div>
+              <div class="step-check"><i class="ri-check-line"></i></div>
+            </div>
+            <div class="launch-step" data-step="build-classpath">
+              <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+              <div class="step-content">
+                <span class="step-name" data-i18n="instances.launch.buildClasspath">处理游戏依赖</span>
+                <span class="step-detail"></span>
+              </div>
+              <div class="step-check"><i class="ri-check-line"></i></div>
+            </div>
+            <div class="launch-step" data-step="extract-natives">
+              <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+              <div class="step-content">
+                <span class="step-name" data-i18n="instances.launch.extractNatives">提取本地库</span>
+                <span class="step-detail"></span>
+              </div>
+              <div class="step-check"><i class="ri-check-line"></i></div>
+            </div>
+            <div class="launch-step" data-step="build-args">
+              <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+              <div class="step-content">
+                <span class="step-name" data-i18n="instances.launch.buildArgs">构建启动参数</span>
+                <span class="step-detail"></span>
+              </div>
+              <div class="step-check"><i class="ri-check-line"></i></div>
+            </div>
+            <div class="launch-step" data-step="launch">
+              <div class="step-icon"><i class="ri-loader-4-line"></i></div>
+              <div class="step-content">
+                <span class="step-name" data-i18n="instances.launch.launch">启动游戏</span>
+                <span class="step-detail"></span>
+              </div>
+              <div class="step-check"><i class="ri-check-line"></i></div>
+            </div>
+          </div>
+          <div class="launch-status" id="launch-status" data-i18n="instances.launch.pleaseWait">请耐心等待</div>
+        </div>
+      </div>
+
+      <!-- 启动按钮 -->
+      <div class="launch-section">
+        <button class="launch-button" id="launch-btn" disabled>
+          <i class="ri-play-fill"></i>
+          <span data-i18n="home.launch">启动游戏</span>
+        </button>
+      </div>
+
+      <!-- 游戏状态 -->
+      <div class="game-status" id="game-status-bar" style="display: none;">
+        <div class="status-dot"></div>
+        <span class="status-text" id="status-text" data-i18n="home.gameRunning">游戏运行中</span>
+        <button class="btn-stop" id="btn-kill">
+          <span data-i18n="home.stop">停止</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

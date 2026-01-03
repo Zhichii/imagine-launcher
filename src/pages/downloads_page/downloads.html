@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>下载中心</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../tauri-bridge.js"></script>
+</head>
+<body>
+  <div class="downloads-page">
+    <div class="page-header">
+      <button class="btn-back" id="back-btn"><i class="ri-arrow-left-s-line"></i><span>返回</span></button>
+      <h1>下载中心</h1>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="minecraft"><img src="../../assets/icons/grass.png" class="tab-icon"><span>安装新游戏</span></button>
+      <button class="tab-btn" data-tab="loaders"><i class="ri-puzzle-line tab-icon-ri"></i><span>安装加载器</span></button>
+    </div>
+
+    <div class="tab-content active" id="tab-minecraft">
+      <div class="toolbar">
+        <div class="search-box"><i class="ri-search-line"></i><input type="text" id="mc-search" placeholder="搜索版本..."></div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all">全部</button>
+          <button class="filter-btn" data-filter="release">正式版</button>
+          <button class="filter-btn" data-filter="snapshot">快照</button>
+          <button class="filter-btn" data-filter="old">旧版本</button>
+        </div>
+        <button class="btn-icon" id="refresh-mc" title="刷新"><i class="ri-refresh-line"></i></button>
+      </div>
+      <div class="version-grid" id="mc-version-grid"><div class="loading-state"><i class="ri-loader-4-line spin"></i><span>加载版本列表...</span></div></div>
+    </div>
+
+    <div class="tab-content" id="tab-loaders">
+      <div class="loaders-intro"><i class="ri-information-line"></i><span>为已安装的游戏版本添加模组加载器</span></div>
+      <div class="loader-cards">
+        <div class="loader-card"><div class="loader-card-icon"><img src="../../assets/icons/fabric.png"></div><div class="loader-card-info"><h3>Fabric</h3><p>轻量级模组加载器</p></div><button class="btn-install-loader" data-loader="fabric"><i class="ri-download-line"></i><span>安装</span></button></div>
+        <div class="loader-card"><div class="loader-card-icon"><img src="../../assets/icons/forge.png"></div><div class="loader-card-info"><h3>Forge</h3><p>最流行的模组加载器</p></div><button class="btn-install-loader" data-loader="forge"><i class="ri-download-line"></i><span>安装</span></button></div>
+        <div class="loader-card"><div class="loader-card-icon"><img src="../../assets/icons/quilt.png"></div><div class="loader-card-info"><h3>Quilt</h3><p>Fabric 分支</p></div><button class="btn-install-loader" data-loader="quilt"><i class="ri-download-line"></i><span>安装</span></button></div>
+        <div class="loader-card"><div class="loader-card-icon"><img src="../../assets/icons/optifine.png"></div><div class="loader-card-info"><h3>OptiFine</h3><p>优化与光影</p></div><button class="btn-install-loader" data-loader="optifine"><i class="ri-download-line"></i><span>安装</span></button></div>
+      </div>
+    </div>
+
+    <!-- 安装向导弹窗 -->
+    <div class="install-wizard-modal" id="install-wizard-modal">
+      <div class="install-wizard-content">
+        <div class="wizard-header">
+          <h3>安装新游戏</h3>
+          <button class="wizard-close" id="wizard-close"><i class="ri-close-line"></i></button>
+        </div>
+        
+        <div class="wizard-steps">
+          <div class="wizard-step active" data-step="1"><span class="step-num">1</span><span class="step-text">选择组件</span></div>
+          <div class="wizard-step" data-step="2"><span class="step-num">2</span><span class="step-text">版本设置</span></div>
+          <div class="wizard-step" data-step="3"><span class="step-num">3</span><span class="step-text">安装</span></div>
+        </div>
+        
+        <!-- 步骤1 -->
+        <div class="wizard-page active" id="wizard-step-1">
+          <div class="selected-version-info">
+            <img src="../../assets/icons/grass.png" class="version-icon-small">
+            <div class="version-info-text">
+              <span class="version-name" id="selected-version-name">Minecraft 1.21</span>
+              <span class="version-type" id="selected-version-type">正式版</span>
+            </div>
+          </div>
+          
+          <div class="component-section">
+            <div class="section-title">模组加载器 <span class="hint">(可选一个)</span></div>
+            <div class="component-grid">
+              <div class="component-item loader-item" data-component="fabric">
+                <input type="radio" name="loader" value="fabric">
+                <img src="../../assets/icons/fabric.png"><span>Fabric</span>
+              </div>
+              <div class="component-item loader-item" data-component="forge">
+                <input type="radio" name="loader" value="forge">
+                <img src="../../assets/icons/forge.png"><span>Forge</span>
+              </div>
+              <div class="component-item loader-item" data-component="quilt">
+                <input type="radio" name="loader" value="quilt">
+                <img src="../../assets/icons/quilt.png"><span>Quilt</span>
+              </div>
+            </div>
+            <div class="loader-version-row" id="loader-version-row" style="display:none;">
+              <label>版本:</label>
+              <select id="wizard-loader-version"><option value="">选择版本</option></select>
+            </div>
+          </div>
+          
+          <div class="component-section">
+            <div class="section-title">附加组件 <span class="hint">(根据加载器自动过滤)</span></div>
+            <div class="component-grid">
+              <div class="component-item addon-item" data-component="fabricapi">
+                <input type="checkbox" name="addon" value="fabricapi">
+                <img src="../../assets/icons/fabric.png"><span>Fabric API</span>
+              </div>
+              <div class="component-item addon-item" data-component="qsl">
+                <input type="checkbox" name="addon" value="qsl">
+                <img src="../../assets/icons/quilt.png"><span>QSL/QFAPI</span>
+              </div>
+              <div class="component-item addon-item" data-component="optifine">
+                <input type="checkbox" name="addon" value="optifine">
+                <img src="../../assets/icons/optifine.png"><span>OptiFine</span>
+              </div>
+            </div>
+            <div class="addon-version-row" id="optifine-version-row" style="display:none;">
+              <label>OptiFine 版本:</label>
+              <select id="wizard-optifine-version"><option value="">选择版本</option></select>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 步骤2 -->
+        <div class="wizard-page" id="wizard-step-2">
+          <div class="form-group">
+            <label>版本名称</label>
+            <input type="text" id="wizard-version-name" placeholder="例如: 1.21-Fabric">
+            <span class="form-hint">此名称将用于标识该版本</span>
+          </div>
+          <div class="install-summary">
+            <h4>安装摘要</h4>
+            <div class="summary-item"><span class="summary-label">游戏版本</span><span class="summary-value" id="summary-game-version">1.21</span></div>
+            <div class="summary-item" id="summary-loader-row" style="display:none;"><span class="summary-label">加载器</span><span class="summary-value" id="summary-loader">-</span></div>
+            <div class="summary-item" id="summary-addons-row" style="display:none;"><span class="summary-label">附加组件</span><span class="summary-value" id="summary-addons">-</span></div>
+          </div>
+        </div>
+        
+        <!-- 步骤3 -->
+        <div class="wizard-page" id="wizard-step-3">
+          <div class="install-progress-section">
+            <div class="progress-icon"><i class="ri-download-cloud-line"></i></div>
+            <div class="progress-status" id="install-status">准备安装...</div>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar"><div class="progress-fill" id="install-progress-fill"></div></div>
+              <span class="progress-percent" id="install-progress-percent">0%</span>
+            </div>
+            <div class="progress-detail" id="install-detail"></div>
+            <div class="progress-speed" id="install-speed"></div>
+          </div>
+        </div>
+        
+        <div class="wizard-footer">
+          <button class="btn-secondary" id="wizard-prev" style="display:none;"><i class="ri-arrow-left-s-line"></i><span>上一步</span></button>
+          <div class="wizard-footer-spacer"></div>
+          <button class="btn-secondary" id="wizard-cancel">取消</button>
+          <button class="btn-primary" id="wizard-next"><span>下一步</span><i class="ri-arrow-right-s-line"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 加载器安装弹窗 -->
+    <div class="loader-install-modal" id="loader-install-modal">
+      <div class="loader-install-content">
+        <div class="loader-install-header">
+          <h3 id="loader-install-title">安装加载器</h3>
+          <button class="loader-install-close" id="loader-install-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="loader-install-body">
+          <div class="form-group"><label>选择游戏版本</label><select id="loader-mc-version"><option value="">加载中...</option></select></div>
+          <div class="form-group"><label id="loader-version-label">加载器版本</label><select id="loader-version"><option value="">选择游戏版本后加载</option></select></div>
+        </div>
+        <div class="loader-install-footer">
+          <button class="btn-secondary" id="loader-install-cancel">取消</button>
+          <button class="btn-primary" id="loader-install-confirm" disabled><i class="ri-download-line"></i><span>安装</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OptiFine 安装弹窗 -->
+    <div class="optifine-install-modal" id="optifine-install-modal">
+      <div class="optifine-install-content">
+        <div class="optifine-install-header">
+          <h3>安装 OptiFine</h3>
+          <button class="optifine-install-close" id="optifine-install-close"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="optifine-install-body">
+          <div class="form-group">
+            <label>选择游戏版本</label>
+            <select id="optifine-mc-version">
+              <option value="">加载中...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>版本类型</label>
+            <div class="optifine-type-filter">
+              <button class="type-filter-btn active" data-type="stable">稳定版</button>
+              <button class="type-filter-btn" data-type="preview">预览版</button>
+              <button class="type-filter-btn" data-type="all">全部</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>OptiFine 版本</label>
+            <select id="optifine-version">
+              <option value="">选择游戏版本后加载</option>
+            </select>
+          </div>
+          <div class="optifine-version-info" id="optifine-version-info" style="display: none;">
+            <div class="version-info-item">
+              <span class="info-label">版本:</span>
+              <span class="info-value" id="optifine-type"></span>
+            </div>
+            <div class="version-info-item">
+              <span class="info-label">状态:</span>
+              <span class="info-value" id="optifine-status"></span>
+            </div>
+          </div>
+          <div class="install-actions">
+            <button class="btn-cancel" id="optifine-cancel">取消</button>
+            <button class="btn-install" id="optifine-install" disabled>
+              <i class="ri-download-line"></i>
+              <span>安装 OptiFine</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
